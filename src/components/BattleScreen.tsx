@@ -4,7 +4,7 @@ import { pokemonDB } from "@/data/pokemon";
 import { generateQuestions } from "@/data/questions";
 import { Question, Pokemon } from "@/types/game";
 import { PixelButton } from "./PixelButton";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
 interface BattleScreenProps {
   gym: string;
@@ -12,6 +12,7 @@ interface BattleScreenProps {
 
 export function BattleScreen({ gym }: BattleScreenProps) {
   const { gameState, setCurrentPage, addPokemon } = useGame();
+  const { toast } = useToast();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [battlePokemon, setBattlePokemon] = useState<Pokemon[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -33,8 +34,6 @@ export function BattleScreen({ gym }: BattleScreenProps) {
         
         setBattlePokemon(legendary ? [...normalPokemon, legendary] : normalPokemon);
         
-        toast.loading("Generating quiz questions...");
-        
         const [mathQs, sciQs, codeQs] = await Promise.all([
           generateQuestions("math", 5),
           generateQuestions("science", 5),
@@ -43,9 +42,6 @@ export function BattleScreen({ gym }: BattleScreenProps) {
         
         const allQuestions = [...mathQs, ...sciQs, ...codeQs].sort(() => 0.5 - Math.random());
         setQuestions(allQuestions);
-        
-        toast.dismiss();
-        toast.success("Questions ready!");
       } else {
         const normalPokemon = regionPokemon.filter(p => p.rarity !== "legendary")
           .sort(() => 0.5 - Math.random())
@@ -59,11 +55,8 @@ export function BattleScreen({ gym }: BattleScreenProps) {
           Coding: "coding",
         }[gym] || "math";
         
-        toast.loading("Generating quiz questions...");
         const qs = await generateQuestions(subject, 10);
         setQuestions(qs);
-        toast.dismiss();
-        toast.success("Questions ready!");
       }
     };
 
@@ -83,9 +76,9 @@ export function BattleScreen({ gym }: BattleScreenProps) {
     const isCorrect = answer === currentQuestion.c;
     if (isCorrect) {
       setCorrectAnswers(prev => prev + 1);
-      toast.success("Correct! ⚡");
+      toast({ title: "Correct! ⚡" });
     } else {
-      toast.error("Wrong answer!");
+      toast({ title: "Wrong answer!", variant: "destructive" });
     }
 
     setTimeout(() => {
@@ -102,8 +95,9 @@ export function BattleScreen({ gym }: BattleScreenProps) {
   const handleBattleEnd = () => {
     if (correctAnswers >= requiredCorrect) {
       addPokemon(currentOpponent);
-      toast.success(`You caught ${currentOpponent.name}!`, {
-        description: `${currentOpponent.desc}`,
+      toast({
+        title: `You caught ${currentOpponent.name}!`,
+        description: currentOpponent.desc,
       });
       
       // Confetti effect
@@ -120,7 +114,11 @@ export function BattleScreen({ gym }: BattleScreenProps) {
         setTimeout(() => setCurrentPage("gyms"), 2000);
       }
     } else {
-      toast.error("Not enough correct answers!");
+      toast({ 
+        title: "Not enough correct answers!", 
+        description: `You need ${requiredCorrect} correct to win.`,
+        variant: "destructive" 
+      });
       setTimeout(() => setCurrentPage("gyms"), 1500);
     }
   };

@@ -8,11 +8,12 @@ import { BattleScreen } from "@/components/BattleScreen";
 import { Pokedex } from "@/components/Pokedex";
 
 function GameContent() {
-  const { currentPage } = useGame();
+  const { currentPage, setCurrentPage } = useGame();
   const [battleGym, setBattleGym] = useState<string>("");
 
   const handleStartBattle = (gym: string) => {
     setBattleGym(gym);
+    setCurrentPage("battle");
   };
 
   return (
