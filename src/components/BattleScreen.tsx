@@ -22,38 +22,52 @@ export function BattleScreen({ gym }: BattleScreenProps) {
   useEffect(() => {
     if (!gameState.currentRegion) return;
 
-    const regionPokemon = gameState.currentRegion.pokemonIds.map(id => pokemonDB[id]);
-    
-    if (gym === "Champion") {
-      const normalPokemon = regionPokemon.filter(p => p.rarity !== "legendary")
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 2);
-      const legendary = regionPokemon.find(p => p.rarity === "legendary");
+    const loadQuestions = async () => {
+      const regionPokemon = gameState.currentRegion!.pokemonIds.map(id => pokemonDB[id]);
       
-      setBattlePokemon(legendary ? [...normalPokemon, legendary] : normalPokemon);
-      
-      const allQuestions = [
-        ...generateQuestions("math", 5),
-        ...generateQuestions("science", 5),
-        ...generateQuestions("coding", 5),
-      ].sort(() => 0.5 - Math.random());
-      
-      setQuestions(allQuestions);
-    } else {
-      const normalPokemon = regionPokemon.filter(p => p.rarity !== "legendary")
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 1);
-      
-      setBattlePokemon(normalPokemon);
-      
-      const subject = {
-        Math: "math",
-        Science: "science",
-        Coding: "coding",
-      }[gym] || "math";
-      
-      setQuestions(generateQuestions(subject, 10));
-    }
+      if (gym === "Champion") {
+        const normalPokemon = regionPokemon.filter(p => p.rarity !== "legendary")
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 2);
+        const legendary = regionPokemon.find(p => p.rarity === "legendary");
+        
+        setBattlePokemon(legendary ? [...normalPokemon, legendary] : normalPokemon);
+        
+        toast.loading("Generating quiz questions...");
+        
+        const [mathQs, sciQs, codeQs] = await Promise.all([
+          generateQuestions("math", 5),
+          generateQuestions("science", 5),
+          generateQuestions("coding", 5),
+        ]);
+        
+        const allQuestions = [...mathQs, ...sciQs, ...codeQs].sort(() => 0.5 - Math.random());
+        setQuestions(allQuestions);
+        
+        toast.dismiss();
+        toast.success("Questions ready!");
+      } else {
+        const normalPokemon = regionPokemon.filter(p => p.rarity !== "legendary")
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 1);
+        
+        setBattlePokemon(normalPokemon);
+        
+        const subject = {
+          Math: "math",
+          Science: "science",
+          Coding: "coding",
+        }[gym] || "math";
+        
+        toast.loading("Generating quiz questions...");
+        const qs = await generateQuestions(subject, 10);
+        setQuestions(qs);
+        toast.dismiss();
+        toast.success("Questions ready!");
+      }
+    };
+
+    loadQuestions();
   }, [gym, gameState.currentRegion]);
 
   const currentOpponent = battlePokemon[0];
@@ -123,8 +137,26 @@ export function BattleScreen({ gym }: BattleScreenProps) {
     }
   };
 
-  if (!currentOpponent || !currentQuestion) {
-    return null;
+  if (!currentOpponent) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-bounce-slow text-6xl mb-4">🎮</div>
+          <p className="text-xl text-primary">Preparing battle...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentQuestion) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-pulse text-6xl mb-4">⚡</div>
+          <p className="text-xl text-primary">Generating questions...</p>
+        </div>
+      </div>
+    );
   }
 
   const background = gameState.currentRegion?.background || "";
