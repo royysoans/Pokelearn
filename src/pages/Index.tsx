@@ -1,14 +1,36 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { GameProvider, useGame } from "@/contexts/GameContext";
+import { HomePage } from "@/components/HomePage";
+import { StarterSelection } from "@/components/StarterSelection";
+import { RegionMap } from "@/components/RegionMap";
+import { GymSelection } from "@/components/GymSelection";
+import { BattleScreen } from "@/components/BattleScreen";
+import { Pokedex } from "@/components/Pokedex";
 
-const Index = () => {
+function GameContent() {
+  const { currentPage } = useGame();
+  const [battleGym, setBattleGym] = useState<string>("");
+
+  const handleStartBattle = (gym: string) => {
+    setBattleGym(gym);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      {currentPage === "home" && <HomePage />}
+      {currentPage === "starter" && <StarterSelection />}
+      {currentPage === "regions" && <RegionMap />}
+      {currentPage === "gyms" && <GymSelection onStartBattle={handleStartBattle} />}
+      {currentPage === "battle" && <BattleScreen gym={battleGym} />}
+      {currentPage === "pokedex" && <Pokedex />}
     </div>
   );
-};
+}
 
-export default Index;
+export default function Index() {
+  return (
+    <GameProvider>
+      <GameContent />
+    </GameProvider>
+  );
+}
