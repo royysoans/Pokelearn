@@ -36,7 +36,7 @@ export function Pokedex() {
                     alt={pokemon.name}
                     className="pixelated w-24 h-24 mx-auto mb-3"
                   />
-                  <h3 className="text-lg font-bold text-primary mb-1">{pokemon.name}</h3>
+                  <h3 className="text-lg font-bold mb-1" style={{ color: pokemon.color }}>{pokemon.name}</h3>
                   <p className="text-xs text-muted-foreground mb-2">{pokemon.desc}</p>
                   <div className="flex gap-2 justify-center text-xs">
                     <span className={`px-2 py-1 rounded ${
