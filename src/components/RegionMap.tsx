@@ -3,38 +3,73 @@ import { regions } from "@/data/regions";
 import { PixelButton } from "./PixelButton";
 
 export function RegionMap() {
-  const { setCurrentPage, setCurrentRegion } = useGame();
+  const { setCurrentPage, setCurrentRegion, hasDefeatedGymLeader } = useGame();
 
-  const handleSelectRegion = (region: typeof regions[0]) => {
-    setCurrentRegion(region);
-    setCurrentPage("gyms");
+  const handleSelectRegion = (region: typeof regions[0], index: number) => {
+    // Check if this is the first region or if previous gym leader was defeated
+    if (index === 0 || hasDefeatedGymLeader(regions[index - 1].name)) {
+      setCurrentRegion(region);
+      setCurrentPage("gyms");
+    }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-6xl text-center">
-        <h2 className="text-2xl md:text-3xl mb-8 text-primary text-shadow-pixel">
-          Select a Region to Explore
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-b from-background to-muted">
+      <div className="w-full max-w-6xl">
+        <h2 className="text-2xl md:text-4xl mb-8 text-center text-primary text-shadow-pixel">
+          🗺️ Journey Through the Regions
         </h2>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-          {regions.map((region) => (
-            <PixelButton
-              key={region.name}
-              variant="primary"
-              onClick={() => handleSelectRegion(region)}
-              className="text-base md:text-lg py-6 flex flex-col items-center gap-2"
-            >
-              <span className="text-3xl">{region.symbol}</span>
-              <span>{region.name}</span>
-              <span className="text-xs opacity-80">{region.type}</span>
-            </PixelButton>
-          ))}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {regions.map((region, index) => {
+            const isUnlocked = index === 0 || hasDefeatedGymLeader(regions[index - 1].name);
+            const isCompleted = hasDefeatedGymLeader(region.name);
+
+            return (
+              <div
+                key={region.name}
+                onClick={() => handleSelectRegion(region, index)}
+                className={`relative border-4 border-border rounded-lg overflow-hidden ${
+                  isUnlocked ? "cursor-pointer hover:scale-105" : "cursor-not-allowed opacity-50"
+                } transition-transform`}
+                style={{
+                  backgroundImage: isUnlocked 
+                    ? `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${region.background})`
+                    : `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url(${region.background})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  filter: isUnlocked ? "none" : "blur(4px)",
+                  minHeight: "200px",
+                }}
+              >
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-black/40">
+                  {isCompleted && (
+                    <div className="absolute top-2 right-2 text-2xl">✅</div>
+                  )}
+                  {!isUnlocked && (
+                    <div className="absolute top-2 left-2 text-2xl">🔒</div>
+                  )}
+                  <span className="text-4xl md:text-5xl mb-2">{region.symbol}</span>
+                  <span className="text-xl md:text-2xl font-bold text-white text-shadow-pixel">
+                    {region.name}
+                  </span>
+                  <span className="text-sm text-white/80">{region.type}</span>
+                  {!isUnlocked && (
+                    <p className="text-xs text-white/60 mt-2 text-center">
+                      Defeat {regions[index - 1].name} Gym Leader
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <PixelButton onClick={() => setCurrentPage("starter")}>
-          Back to Starter
-        </PixelButton>
+        <div className="text-center">
+          <PixelButton onClick={() => setCurrentPage("starter")}>
+            Back to Starter
+          </PixelButton>
+        </div>
       </div>
     </div>
   );

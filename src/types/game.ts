@@ -2,9 +2,10 @@ export interface Pokemon {
   id: number;
   name: string;
   type: string;
-  rarity: "common" | "uncommon" | "legendary";
+  rarity: "common" | "uncommon" | "epic" | "legendary";
   image: string;
   desc: string;
+  color: string;
 }
 
 export interface Region {

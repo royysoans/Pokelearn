@@ -3,16 +3,19 @@ import { GameProvider, useGame } from "@/contexts/GameContext";
 import { HomePage } from "@/components/HomePage";
 import { StarterSelection } from "@/components/StarterSelection";
 import { RegionMap } from "@/components/RegionMap";
-import { GymSelection } from "@/components/GymSelection";
+import { ArenaSelection } from "@/components/ArenaSelection";
 import { BattleScreen } from "@/components/BattleScreen";
 import { Pokedex } from "@/components/Pokedex";
 
 function GameContent() {
   const { currentPage, setCurrentPage } = useGame();
-  const [battleGym, setBattleGym] = useState<string>("");
+  const [battleConfig, setBattleConfig] = useState<{
+    gym: string;
+    difficulty: "easy" | "medium" | "hard" | "leader";
+  }>({ gym: "", difficulty: "easy" });
 
-  const handleStartBattle = (gym: string) => {
-    setBattleGym(gym);
+  const handleStartBattle = (gym: string, difficulty: "easy" | "medium" | "hard" | "leader") => {
+    setBattleConfig({ gym, difficulty });
     setCurrentPage("battle");
   };
 
@@ -21,8 +24,15 @@ function GameContent() {
       {currentPage === "home" && <HomePage />}
       {currentPage === "starter" && <StarterSelection />}
       {currentPage === "regions" && <RegionMap />}
-      {currentPage === "gyms" && <GymSelection onStartBattle={handleStartBattle} />}
-      {currentPage === "battle" && <BattleScreen gym={battleGym} />}
+      {currentPage === "gyms" && (
+        <ArenaSelection
+          onStartBattle={handleStartBattle}
+          onBack={() => setCurrentPage("regions")}
+        />
+      )}
+      {currentPage === "battle" && (
+        <BattleScreen gym={battleConfig.gym} difficulty={battleConfig.difficulty} />
+      )}
       {currentPage === "pokedex" && <Pokedex />}
     </div>
   );

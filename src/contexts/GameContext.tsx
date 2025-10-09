@@ -7,6 +7,8 @@ interface GameContextType {
   setCurrentPage: (page: GamePage) => void;
   addPokemon: (pokemon: Pokemon) => void;
   setCurrentRegion: (region: Region | null) => void;
+  addBadge: (badge: string) => void;
+  hasDefeatedGymLeader: (regionName: string) => boolean;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -38,6 +40,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setGameState(prev => ({ ...prev, currentRegion: region }));
   };
 
+  const addBadge = (badge: string) => {
+    setGameState(prev => ({
+      ...prev,
+      badges: prev.badges.includes(badge) ? prev.badges : [...prev.badges, badge],
+    }));
+  };
+
+  const hasDefeatedGymLeader = (regionName: string) => {
+    return gameState.badges.includes(`${regionName}-Leader`);
+  };
+
   return (
     <GameContext.Provider
       value={{
@@ -46,6 +59,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setCurrentPage,
         addPokemon,
         setCurrentRegion,
+        addBadge,
+        hasDefeatedGymLeader,
       }}
     >
       {children}

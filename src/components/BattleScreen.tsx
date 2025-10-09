@@ -8,10 +8,11 @@ import { useToast } from "@/hooks/use-toast";
 
 interface BattleScreenProps {
   gym: string;
+  difficulty: "easy" | "medium" | "hard" | "leader";
 }
 
-export function BattleScreen({ gym }: BattleScreenProps) {
-  const { gameState, setCurrentPage, addPokemon } = useGame();
+export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
+  const { gameState, setCurrentPage, addPokemon, addBadge } = useGame();
   const { toast } = useToast();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [battlePokemon, setBattlePokemon] = useState<Pokemon[]>([]);
@@ -26,42 +27,56 @@ export function BattleScreen({ gym }: BattleScreenProps) {
     const loadQuestions = async () => {
       const regionPokemon = gameState.currentRegion!.pokemonIds.map(id => pokemonDB[id]);
       
-      if (gym === "Champion") {
-        const normalPokemon = regionPokemon.filter(p => p.rarity !== "legendary")
-          .sort(() => 0.5 - Math.random())
-          .slice(0, 2);
+      // Determine Pokemon and question count based on difficulty
+      let selectedPokemon: Pokemon[];
+      let questionCount: number;
+      let subject: string;
+
+      if (difficulty === "leader") {
+        // Gym Leader: Legendary Pokemon, 20 mixed questions
         const legendary = regionPokemon.find(p => p.rarity === "legendary");
-        
-        setBattlePokemon(legendary ? [...normalPokemon, legendary] : normalPokemon);
+        selectedPokemon = legendary ? [legendary] : [];
+        questionCount = 20;
         
         const [mathQs, sciQs, codeQs] = await Promise.all([
-          generateQuestions("math", 5),
-          generateQuestions("science", 5),
-          generateQuestions("coding", 5),
+          generateQuestions("math", 7),
+          generateQuestions("science", 7),
+          generateQuestions("coding", 6),
         ]);
         
         const allQuestions = [...mathQs, ...sciQs, ...codeQs].sort(() => 0.5 - Math.random());
         setQuestions(allQuestions);
-      } else {
-        const normalPokemon = regionPokemon.filter(p => p.rarity !== "legendary")
-          .sort(() => 0.5 - Math.random())
-          .slice(0, 1);
-        
-        setBattlePokemon(normalPokemon);
-        
-        const subject = {
-          Math: "math",
-          Science: "science",
-          Coding: "coding",
-        }[gym] || "math";
-        
-        const qs = await generateQuestions(subject, 10);
-        setQuestions(qs);
+        setBattlePokemon(selectedPokemon);
+        return;
       }
+
+      // Determine rarity and question count based on difficulty
+      const rarityMap = {
+        easy: { rarity: "common", count: 5 },
+        medium: { rarity: "uncommon", count: 10 },
+        hard: { rarity: "epic", count: 15 },
+      };
+
+      const config = rarityMap[difficulty];
+      selectedPokemon = regionPokemon
+        .filter(p => p.rarity === config.rarity)
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 1);
+      
+      questionCount = config.count;
+
+      // Determine subject from gym name
+      subject = gym.includes("Maths") ? "math" 
+        : gym.includes("Science") ? "science"
+        : "coding";
+
+      const qs = await generateQuestions(subject, questionCount);
+      setQuestions(qs);
+      setBattlePokemon(selectedPokemon);
     };
 
     loadQuestions();
-  }, [gym, gameState.currentRegion]);
+  }, [gym, difficulty, gameState.currentRegion]);
 
   const currentOpponent = battlePokemon[0];
   const currentQuestion = questions[currentQuestionIndex];
@@ -95,10 +110,20 @@ export function BattleScreen({ gym }: BattleScreenProps) {
   const handleBattleEnd = () => {
     if (correctAnswers >= requiredCorrect) {
       addPokemon(currentOpponent);
-      toast({
-        title: `You caught ${currentOpponent.name}!`,
-        description: currentOpponent.desc,
-      });
+      
+      // Award badge if Gym Leader was defeated
+      if (difficulty === "leader" && gameState.currentRegion) {
+        addBadge(`${gameState.currentRegion.name}-Leader`);
+        toast({
+          title: `🏆 You defeated the ${gameState.currentRegion.name} Gym Leader!`,
+          description: `You caught ${currentOpponent.name} and earned a badge!`,
+        });
+      } else {
+        toast({
+          title: `You caught ${currentOpponent.name}!`,
+          description: currentOpponent.desc,
+        });
+      }
       
       // Confetti effect
       createConfetti();
@@ -163,7 +188,7 @@ export function BattleScreen({ gym }: BattleScreenProps) {
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-2xl text-center">
         <h2 className="text-xl md:text-2xl mb-2 text-primary text-shadow-pixel">
-          {gym} Battle vs {currentOpponent.name}
+          {gym} Battle vs <span style={{ color: currentOpponent.color }}>{currentOpponent.name}</span>
         </h2>
         <p className="text-sm md:text-base text-muted-foreground mb-4">
           Question {currentQuestionIndex + 1} / {questions.length} | Correct: {correctAnswers}
