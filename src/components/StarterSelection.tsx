@@ -29,7 +29,7 @@ export function StarterSelection() {
                 alt={starter.name}
                 className="pixelated w-32 h-32 mx-auto mb-4 group-hover:animate-bounce-slow"
               />
-              <h3 className="text-xl font-bold text-primary mb-2">{starter.name}</h3>
+              <h3 className="text-xl font-bold mb-2" style={{ color: starter.color }}>{starter.name}</h3>
               <p className="text-sm text-muted-foreground mb-2">{starter.desc}</p>
               <span className={`inline-block px-3 py-1 text-xs rounded ${
                 starter.type === "Fire" ? "bg-orange-500" :
