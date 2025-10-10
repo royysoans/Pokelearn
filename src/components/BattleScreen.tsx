@@ -21,6 +21,7 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [shuffledAnswers, setShuffledAnswers] = useState<string[]>([]);
 
   useEffect(() => {
     if (!gameState.currentRegion) return;
@@ -38,9 +39,9 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
         questionCount = 20;
         
         const [mathQs, sciQs, codeQs] = await Promise.all([
-          generateQuestions("math", 7),
-          generateQuestions("science", 7),
-          generateQuestions("coding", 6),
+          generateQuestions("math", 7, regionName),
+          generateQuestions("science", 7, regionName),
+          generateQuestions("coding", 6, regionName),
         ]);
         const allQuestions = [...mathQs, ...sciQs, ...codeQs].sort(() => 0.5 - Math.random());
         selectedPokemon = [pokemonDB[arenaPokemonMap[regionName][pokemonKey]]];
@@ -62,7 +63,7 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
         : gym.includes("Science") ? "science"
         : "coding";
 
-      const qs = await generateQuestions(subject, questionCount);
+      const qs = await generateQuestions(subject, questionCount, regionName);
       setQuestions(qs);
       setBattlePokemon(selectedPokemon);
     };
@@ -96,9 +97,17 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
         setCurrentQuestionIndex(prev => prev + 1);
         setSelectedAnswer(null);
         setIsAnswered(false);
+        setShuffledAnswers([]); // Reset shuffled answers for next question
       }
     }, 1000);
   };
+
+  // Shuffle answers only once when question changes
+  useEffect(() => {
+    if (currentQuestion && shuffledAnswers.length === 0) {
+      setShuffledAnswers([...currentQuestion.a].sort(() => Math.random() - 0.5));
+    }
+  }, [currentQuestion, shuffledAnswers.length]);
 
   const handleBattleEnd = () => {
     if (correctAnswers >= requiredCorrect) {
@@ -208,7 +217,7 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
           <p className="text-base md:text-xl mb-6">{currentQuestion.q}</p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {currentQuestion.a.sort(() => Math.random() - 0.5).map((answer) => {
+            {shuffledAnswers.map((answer) => {
               const isSelected = selectedAnswer === answer;
               const isCorrect = answer === currentQuestion.c;
               

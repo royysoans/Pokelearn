@@ -17,6 +17,8 @@ export function RegionMap() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-b from-background to-muted">
       <div className="w-full max-w-6xl">
+        <LevelBar />
+        
         <h2 className="text-2xl md:text-4xl mb-8 text-center text-primary text-shadow-pixel">
           🗺️ Journey Through the Regions
         </h2>

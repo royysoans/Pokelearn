@@ -26,11 +26,11 @@ const questionBank: Record<string, Question[]> = {
   ],
 };
 
-export async function generateQuestions(subject: string, count: number): Promise<Question[]> {
+export async function generateQuestions(subject: string, count: number, region?: string): Promise<Question[]> {
   try {
     // Call the AI edge function to generate questions
     const { data, error } = await supabase.functions.invoke('generate-quiz', {
-      body: { subject, count }
+      body: { subject, count, region }
     });
 
     if (error) {

@@ -19,8 +19,8 @@ export function Pokedex() {
             <p className="text-xl text-muted-foreground mb-6">
               No Pokémon caught yet! Start battling to catch them all!
             </p>
-            <PixelButton onClick={() => setCurrentPage("regions")}>
-              Go to Regions
+            <PixelButton onClick={() => setCurrentPage("gyms")}>
+              Go to Gyms
             </PixelButton>
           </div>
         ) : (

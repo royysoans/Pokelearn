@@ -18,13 +18,25 @@ serve(async (req) => {
   }
 
   try {
-    const { subject, count } = await req.json();
-    console.log(`Generating ${count} ${subject} questions`);
+    const { subject, count, region } = await req.json();
+    console.log(`Generating ${count} ${subject} questions for ${region || 'unknown region'}`);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
-    }
+    const GEMINI_API_KEY = "AIzaSyBQwsH9hErcI9GyCNdCQBkKMSTlD7DOy3s";
+
+    // Difficulty mapping based on region progression
+    // Kanto (easiest) -> Johto -> Hoenn -> Sinnoh -> Unova -> Kalos -> Alola -> Galar (hardest)
+    const difficultyMap: Record<string, string> = {
+      'Kanto': 'elementary level - basic concepts for beginners',
+      'Johto': 'beginner level - simple concepts with slightly more depth',
+      'Hoenn': 'intermediate level - moderate difficulty requiring some thinking',
+      'Sinnoh': 'intermediate-advanced level - requires understanding of concepts',
+      'Unova': 'advanced level - challenging questions requiring analysis',
+      'Kalos': 'advanced-expert level - complex problems with multiple steps',
+      'Alola': 'expert level - sophisticated questions requiring deep knowledge',
+      'Galar': 'master level - extremely challenging questions for experts'
+    };
+
+    const difficultyLevel = difficultyMap[region] || 'intermediate level';
 
     const systemPrompt = `You are a quiz question generator for an educational Pokémon game. Generate engaging, age-appropriate questions for students.
 
@@ -41,52 +53,42 @@ CRITICAL: You must respond with ONLY valid JSON in this exact format, with no ad
 
 Rules:
 - Generate exactly ${count} questions about ${subject}
+- Difficulty level: ${difficultyLevel}
 - Each question must have exactly 3 answer choices
-- Make questions fun and educational
+- Make questions fun and educational with Pokémon themes when possible
 - One answer must be clearly correct
 - Keep questions concise and clear
+- Adjust difficulty based on the region: ${region || 'Kanto'} (earlier regions = easier, later regions = harder)
 - The "c" field must match one of the answers in the "a" array exactly`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Generate ${count} ${subject} quiz questions in the JSON format specified.` }
-        ],
-        temperature: 0.8,
+        contents: [{
+          parts: [{
+            text: `${systemPrompt}\n\nGenerate ${count} ${subject} quiz questions in the JSON format specified.`
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.8,
+          topK: 40,
+          topP: 0.95,
+        }
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'AI credits exhausted. Please add credits to continue.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      throw new Error(`AI Gateway error: ${response.status}`);
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
-    console.log('AI Response:', content);
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    console.log('Gemini Response:', content);
 
     // Parse the JSON response
     let parsedQuestions: Question[];
