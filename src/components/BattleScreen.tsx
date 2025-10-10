@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { pokemonDB } from "@/data/pokemon";
+import { arenaPokemonMap } from "@/data/arenaPokemon";
 import { generateQuestions } from "@/data/questions";
 import { Question, Pokemon } from "@/types/game";
 import { PixelButton } from "./PixelButton";
@@ -12,7 +13,7 @@ interface BattleScreenProps {
 }
 
 export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
-  const { gameState, setCurrentPage, addPokemon, addBadge } = useGame();
+  const { gameState, setCurrentPage, addPokemon, addBadge, addXP } = useGame();
   const { toast } = useToast();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [battlePokemon, setBattlePokemon] = useState<Pokemon[]>([]);
@@ -25,17 +26,15 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
     if (!gameState.currentRegion) return;
 
     const loadQuestions = async () => {
-      const regionPokemon = gameState.currentRegion!.pokemonIds.map(id => pokemonDB[id]);
+      const regionName = gameState.currentRegion!.name;
       
-      // Determine Pokemon and question count based on difficulty
-      let selectedPokemon: Pokemon[];
+      // Get fixed Pokemon based on region, gym, and difficulty
+      let pokemonKey: string;
       let questionCount: number;
-      let subject: string;
+      let selectedPokemon: Pokemon[];
 
       if (difficulty === "leader") {
-        // Gym Leader: Legendary Pokemon, 20 mixed questions
-        const legendary = regionPokemon.find(p => p.rarity === "legendary");
-        selectedPokemon = legendary ? [legendary] : [];
+        pokemonKey = `${regionName}-Leader`;
         questionCount = 20;
         
         const [mathQs, sciQs, codeQs] = await Promise.all([
@@ -43,30 +42,23 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
           generateQuestions("science", 7),
           generateQuestions("coding", 6),
         ]);
-        
         const allQuestions = [...mathQs, ...sciQs, ...codeQs].sort(() => 0.5 - Math.random());
+        selectedPokemon = [pokemonDB[arenaPokemonMap[regionName][pokemonKey]]];
         setQuestions(allQuestions);
         setBattlePokemon(selectedPokemon);
         return;
       }
 
-      // Determine rarity and question count based on difficulty
-      const rarityMap = {
-        easy: { rarity: "common", count: 5 },
-        medium: { rarity: "uncommon", count: 10 },
-        hard: { rarity: "epic", count: 15 },
-      };
-
-      const config = rarityMap[difficulty];
-      selectedPokemon = regionPokemon
-        .filter(p => p.rarity === config.rarity)
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 1);
+      // Get fixed Pokemon and question count
+      const difficultyMap = { easy: 5, medium: 10, hard: 15 };
+      questionCount = difficultyMap[difficulty];
+      pokemonKey = `${gym}-${difficulty}`;
       
-      questionCount = config.count;
+      const pokemonId = arenaPokemonMap[regionName][pokemonKey];
+      selectedPokemon = [pokemonDB[pokemonId]];
 
       // Determine subject from gym name
-      subject = gym.includes("Maths") ? "math" 
+      const subject = gym.includes("Maths") ? "math" 
         : gym.includes("Science") ? "science"
         : "coding";
 
@@ -91,7 +83,8 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
     const isCorrect = answer === currentQuestion.c;
     if (isCorrect) {
       setCorrectAnswers(prev => prev + 1);
-      toast({ title: "Correct! ⚡" });
+      addXP(10);
+      toast({ title: "Correct! +10 XP ⚡" });
     } else {
       toast({ title: "Wrong answer!", variant: "destructive" });
     }

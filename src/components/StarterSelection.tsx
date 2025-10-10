@@ -1,20 +1,72 @@
+import { useState } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { starters } from "@/data/pokemon";
+import { pokemonDB } from "@/data/pokemon";
 import { PixelButton } from "./PixelButton";
 
 export function StarterSelection() {
   const { setCurrentPage, addPokemon } = useGame();
+  const [showPikachu, setShowPikachu] = useState(false);
 
   const handleSelectStarter = (starter: typeof starters[0]) => {
     addPokemon(starter);
     setCurrentPage("regions");
   };
 
+  if (showPikachu) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="w-full max-w-md text-center animate-fade-in">
+          <h2 className="text-2xl md:text-3xl mb-6 text-primary text-shadow-pixel animate-pulse">
+            A wild Pikachu appeared! ⚡
+          </h2>
+          
+          <div className="bg-card border-4 border-border p-8 rounded mb-6">
+            <img
+              src={pokemonDB[4].image}
+              alt="Pikachu"
+              className="pixelated w-40 h-40 mx-auto mb-4 animate-bounce-slow"
+            />
+            <h3 className="text-2xl font-bold mb-2" style={{ color: pokemonDB[4].color }}>
+              {pokemonDB[4].name}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-2">{pokemonDB[4].desc}</p>
+            <span className="inline-block px-3 py-1 text-xs rounded bg-yellow-500 text-white">
+              Electric
+            </span>
+          </div>
+
+          <div className="flex gap-4 justify-center">
+            <PixelButton
+              variant="primary"
+              onClick={() => handleSelectStarter(pokemonDB[4])}
+            >
+              Choose Pikachu
+            </PixelButton>
+            <PixelButton
+              variant="secondary"
+              onClick={() => setShowPikachu(false)}
+            >
+              Flee
+            </PixelButton>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-4xl text-center">
         <h2 className="text-2xl md:text-3xl mb-8 text-primary text-shadow-pixel">
           Choose Your Starter Pokémon
+          <button
+            onClick={() => setShowPikachu(true)}
+            className="ml-3 text-3xl hover:scale-125 transition-transform inline-block"
+            aria-label="Special surprise"
+          >
+            ⚡
+          </button>
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

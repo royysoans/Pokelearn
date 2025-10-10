@@ -1,6 +1,7 @@
 import { useGame } from "@/contexts/GameContext";
 import { regions } from "@/data/regions";
 import { PixelButton } from "./PixelButton";
+import { LevelBar } from "./LevelBar";
 
 export function RegionMap() {
   const { setCurrentPage, setCurrentRegion, hasDefeatedGymLeader } = useGame();
@@ -66,8 +67,8 @@ export function RegionMap() {
         </div>
 
         <div className="text-center">
-          <PixelButton onClick={() => setCurrentPage("starter")}>
-            Back to Starter
+          <PixelButton onClick={() => setCurrentPage("pokedex")}>
+            View Pokédex
           </PixelButton>
         </div>
       </div>

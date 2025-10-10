@@ -9,6 +9,7 @@ interface GameContextType {
   setCurrentRegion: (region: Region | null) => void;
   addBadge: (badge: string) => void;
   hasDefeatedGymLeader: (regionName: string) => boolean;
+  addXP: (amount: number) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -51,6 +52,36 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return gameState.badges.includes(`${regionName}-Leader`);
   };
 
+  const levelThresholds = [
+    0, 20, 45, 85, 145, 225, 325, 450, 600, 775, 975, 1225, 1525, 1875, 2275, 2725, 3225, 3825, 4525, 5325
+  ];
+
+  const addXP = (amount: number) => {
+    setGameState(prev => {
+      const newXP = prev.xp + amount;
+      let newLevel = prev.level;
+      let newXpToNextLevel = prev.xpToNextLevel;
+
+      // Calculate new level based on total XP
+      for (let i = levelThresholds.length - 1; i >= 0; i--) {
+        if (newXP >= levelThresholds[i]) {
+          newLevel = i + 1;
+          newXpToNextLevel = i < levelThresholds.length - 1 
+            ? levelThresholds[i + 1] 
+            : levelThresholds[i]; // Max level
+          break;
+        }
+      }
+
+      return {
+        ...prev,
+        xp: newXP,
+        level: newLevel,
+        xpToNextLevel: newXpToNextLevel,
+      };
+    });
+  };
+
   return (
     <GameContext.Provider
       value={{
@@ -61,6 +92,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setCurrentRegion,
         addBadge,
         hasDefeatedGymLeader,
+        addXP,
       }}
     >
       {children}
