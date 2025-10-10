@@ -6,6 +6,7 @@ import { generateQuestions } from "@/data/questions";
 import { Question, Pokemon } from "@/types/game";
 import { PixelButton } from "./PixelButton";
 import { useToast } from "@/hooks/use-toast";
+import { useSound } from "@/hooks/use-sound";
 
 interface BattleScreenProps {
   gym: string;
@@ -15,6 +16,7 @@ interface BattleScreenProps {
 export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
   const { gameState, setCurrentPage, addPokemon, addBadge, addXP } = useGame();
   const { toast } = useToast();
+  const { playCorrect, playWrong, playVictory } = useSound();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [battlePokemon, setBattlePokemon] = useState<Pokemon[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -39,9 +41,9 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
         questionCount = 20;
         
         const [mathQs, sciQs, codeQs] = await Promise.all([
-          generateQuestions("math", 7, regionName),
-          generateQuestions("science", 7, regionName),
-          generateQuestions("coding", 6, regionName),
+          generateQuestions("math", 7, regionName, gym, difficulty),
+          generateQuestions("science", 7, regionName, gym, difficulty),
+          generateQuestions("coding", 6, regionName, gym, difficulty),
         ]);
         const allQuestions = [...mathQs, ...sciQs, ...codeQs].sort(() => 0.5 - Math.random());
         selectedPokemon = [pokemonDB[arenaPokemonMap[regionName][pokemonKey]]];
@@ -63,7 +65,7 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
         : gym.includes("Science") ? "science"
         : "coding";
 
-      const qs = await generateQuestions(subject, questionCount, regionName);
+      const qs = await generateQuestions(subject, questionCount, regionName, gym, difficulty);
       setQuestions(qs);
       setBattlePokemon(selectedPokemon);
     };
@@ -86,8 +88,10 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
       setCorrectAnswers(prev => prev + 1);
       addXP(10);
       toast({ title: "Correct! +10 XP ⚡" });
+      playCorrect();
     } else {
       toast({ title: "Wrong answer!", variant: "destructive" });
+      playWrong();
     }
 
     setTimeout(() => {
@@ -112,7 +116,51 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
   const handleBattleEnd = () => {
     if (correctAnswers >= requiredCorrect) {
       addPokemon(currentOpponent);
+      playVictory();
       
+      // Canvas confetti effect (replaces DOM nodes)
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        canvas.style.position = "fixed";
+        canvas.style.left = "0";
+        canvas.style.top = "0";
+        canvas.style.pointerEvents = "none";
+        canvas.style.zIndex = "9999";
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext("2d");
+        const pieces = Array.from({ length: 160 }).map(() => ({
+          x: Math.random() * canvas.width,
+          y: -20 - Math.random() * 200,
+          r: 4 + Math.random() * 6,
+          c: ["#facc15", "#22c55e", "#3b82f6", "#f472b6"][Math.floor(Math.random() * 4)],
+          vx: -2 + Math.random() * 4,
+          vy: 2 + Math.random() * 3,
+          a: Math.random() * Math.PI * 2,
+          va: -0.2 + Math.random() * 0.4,
+        }));
+        let frame = 0;
+        const loop = () => {
+          if (!ctx) return;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          pieces.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.a += p.va;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.a);
+            ctx.fillStyle = p.c;
+            ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
+            ctx.restore();
+          });
+          frame++;
+          if (frame < 240) requestAnimationFrame(loop); else canvas.remove();
+        };
+        requestAnimationFrame(loop);
+      } catch {}
+
       // Award badge if Gym Leader was defeated
       if (difficulty === "leader" && gameState.currentRegion) {
         addBadge(`${gameState.currentRegion.name}-Leader`);
@@ -126,10 +174,7 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
           description: currentOpponent.desc,
         });
       }
-      
-      // Confetti effect
-      createConfetti();
-      
+
       const remainingPokemon = battlePokemon.slice(1);
       if (remainingPokemon.length > 0) {
         setBattlePokemon(remainingPokemon);

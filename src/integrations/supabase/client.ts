@@ -4,6 +4,7 @@ import type { Database } from './types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const FUNCTIONS_URL = import.meta.env.VITE_FUNCTIONS_URL; // e.g. http://localhost:8002 in dev
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -13,5 +14,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+  },
+  // Route edge function calls to a custom URL if provided (useful for local dev)
+  functions: FUNCTIONS_URL ? { url: FUNCTIONS_URL } : undefined,
 });
