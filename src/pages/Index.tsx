@@ -14,11 +14,11 @@ function GameContent() {
   const { toast } = useToast();
   const [battleConfig, setBattleConfig] = useState<{
     gym: string;
-    difficulty: "easy" | "medium" | "hard" | "leader";
-  }>({ gym: "", difficulty: "easy" });
+    level: number | "leader";
+  }>({ gym: "", level: 1 });
 
-  const handleStartBattle = (gym: string, difficulty: "easy" | "medium" | "hard" | "leader") => {
-    setBattleConfig({ gym, difficulty });
+  const handleStartBattle = (gym: string, level: number | "leader") => {
+    setBattleConfig({ gym, level });
     setCurrentPage("battle");
   };
 
@@ -39,7 +39,7 @@ function GameContent() {
         />
       )}
       {currentPage === "battle" && (
-        <BattleScreen gym={battleConfig.gym} difficulty={battleConfig.difficulty} />
+        <BattleScreen gym={battleConfig.gym} level={battleConfig.level} />
       )}
       {currentPage === "pokedex" && <Pokedex />}
     </div>

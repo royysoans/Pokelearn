@@ -32,6 +32,7 @@ export interface GameState {
   level: number;
   xp: number;
   xpToNextLevel: number;
+  completedLevels: Record<string, Record<string, number[]>>; // regionName -> subject -> completed levels [1-10]
 }
 
 export type GamePage = 'home' | 'starter' | 'regions' | 'gyms' | 'battle' | 'pokedex';

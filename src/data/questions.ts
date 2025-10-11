@@ -81,14 +81,22 @@ export async function generateQuestions(
   count: number,
   region?: string,
   gym?: string,
-  difficulty?: string,
+  level?: number | string,
 ): Promise<Question[]> {
   try {
     // Call Supabase Edge Function
-    const { questions } = await invokeFunction("generate-quiz", { subject, count, region, gym, difficulty });
+    let difficultyStr: string;
+    if (level === "leader") {
+      difficultyStr = "expert";
+    } else if (typeof level === "number") {
+      difficultyStr = level <= 3 ? "easy" : level <= 6 ? "medium" : level <= 9 ? "hard" : "expert";
+    } else {
+      difficultyStr = "normal";
+    }
+    const { questions } = await invokeFunction("generate-quiz", { subject, count, region, gym, difficulty: difficultyStr });
 
     // Session & recent dedup
-    const usedKey = `usedQuestions:${region ?? "Unknown"}|${gym ?? "Arena"}|${subject}|${difficulty ?? "normal"}`;
+    const usedKey = `usedQuestions:${region ?? "Unknown"}|${gym ?? "Arena"}|${subject}|${level ?? "normal"}`;
     const used = getUsedQuestionSet(usedKey);
     const recent = getRecentQuestions();
 
@@ -115,9 +123,9 @@ export async function generateQuestions(
     return selected.sort(() => Math.random() - 0.5);
   } catch (err) {
     console.error("AI generation failed, using fallback:", err);
-    // Return fallback questions
+    // Return fallback questions, repeating if necessary to reach count
     const base = questionBank[subject] || questionBank.math;
-    return base.slice(0, count);
+    return Array.from({ length: count }, (_, i) => ({ ...base[i % base.length] }));
   }
 }
 
@@ -128,6 +136,7 @@ export async function fetchQuizQuestions(subject: string, count: number): Promis
     return questions;
   } catch (err) {
     console.error("Failed to fetch AI questions, using fallback:", err);
-    return (questionBank[subject] || questionBank.math).slice(0, count);
+    const base = questionBank[subject] || questionBank.math;
+    return Array.from({ length: count }, (_, i) => ({ ...base[i % base.length] }));
   }
 }

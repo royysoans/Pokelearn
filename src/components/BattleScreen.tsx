@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { pokemonDB } from "@/data/pokemon";
 import { arenaPokemonMap } from "@/data/arenaPokemon";
@@ -10,17 +10,18 @@ import { useSound } from "@/hooks/use-sound";
 
 interface BattleScreenProps {
   gym: string;
-  difficulty: "easy" | "medium" | "hard" | "leader";
+  level: number | "leader";
 }
 
-export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
-  const { gameState, setCurrentPage, addPokemon, addBadge, addXP } = useGame();
+export function BattleScreen({ gym, level }: BattleScreenProps) {
+  const { gameState, setCurrentPage, addPokemon, addBadge, addXP, addCompletedLevel } = useGame();
   const { toast } = useToast();
   const { playCorrect, playWrong, playVictory } = useSound();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [battlePokemon, setBattlePokemon] = useState<Pokemon[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
+  const correctAnswersRef = useRef(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [shuffledAnswers, setShuffledAnswers] = useState<string[]>([]);
@@ -30,52 +31,57 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
 
     const loadQuestions = async () => {
       const regionName = gameState.currentRegion!.name;
-      
-      // Get fixed Pokemon based on region, gym, and difficulty
+
+      // Get fixed Pokemon based on region, gym, and level
       let pokemonKey: string;
       let questionCount: number;
       let selectedPokemon: Pokemon[];
 
-      if (difficulty === "leader") {
+      if (level === "leader") {
         pokemonKey = `${regionName}-Leader`;
-        questionCount = 20;
-        
+        questionCount = 15; // 5 each subject
+
         const [mathQs, sciQs, codeQs] = await Promise.all([
-          generateQuestions("math", 7, regionName, gym, difficulty),
-          generateQuestions("science", 7, regionName, gym, difficulty),
-          generateQuestions("coding", 6, regionName, gym, difficulty),
+          generateQuestions("math", 5, regionName, gym, level as any),
+          generateQuestions("science", 5, regionName, gym, level as any),
+          generateQuestions("coding", 5, regionName, gym, level as any),
         ]);
         const allQuestions = [...mathQs, ...sciQs, ...codeQs].sort(() => 0.5 - Math.random());
         selectedPokemon = [pokemonDB[arenaPokemonMap[regionName][pokemonKey]]];
         setQuestions(allQuestions);
         setBattlePokemon(selectedPokemon);
+        setCorrectAnswers(0);
+        correctAnswersRef.current = 0;
         return;
       }
 
-      // Get fixed Pokemon and question count
-      const difficultyMap = { easy: 5, medium: 10, hard: 15 };
-      questionCount = difficultyMap[difficulty];
-      pokemonKey = `${gym}-${difficulty}`;
-      
+      // For levels 1-10, always 10 questions
+      questionCount = 10;
+      // Determine pokemon based on level: 1-3 easy, 4-6 medium, 7-9 hard, 10 epic
+      const levelDifficulty = level <= 3 ? "easy" : level <= 6 ? "medium" : level <= 9 ? "hard" : "epic";
+      pokemonKey = `${gym}-${levelDifficulty}`;
+
       const pokemonId = arenaPokemonMap[regionName][pokemonKey];
       selectedPokemon = [pokemonDB[pokemonId]];
 
       // Determine subject from gym name
-      const subject = gym.includes("Maths") ? "math" 
+      const subject = gym.includes("Maths") ? "math"
         : gym.includes("Science") ? "science"
         : "coding";
 
-      const qs = await generateQuestions(subject, questionCount, regionName, gym, difficulty);
+      const qs = await generateQuestions(subject, questionCount, regionName, gym, level);
       setQuestions(qs);
       setBattlePokemon(selectedPokemon);
+      setCorrectAnswers(0);
+      correctAnswersRef.current = 0;
     };
 
     loadQuestions();
-  }, [gym, difficulty, gameState.currentRegion]);
+  }, [gym, level, gameState.currentRegion]);
 
   const currentOpponent = battlePokemon[0];
   const currentQuestion = questions[currentQuestionIndex];
-  const requiredCorrect = Math.ceil(questions.length * 0.7);
+  const requiredCorrect = 5;
 
   const handleAnswer = (answer: string) => {
     if (isAnswered) return;
@@ -86,6 +92,7 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
     const isCorrect = answer === currentQuestion.c;
     if (isCorrect) {
       setCorrectAnswers(prev => prev + 1);
+      correctAnswersRef.current += 1;
       addXP(10);
       toast({ title: "Correct! +10 XP ⚡" });
       playCorrect();
@@ -114,10 +121,10 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
   }, [currentQuestion, shuffledAnswers.length]);
 
   const handleBattleEnd = () => {
-    if (correctAnswers >= requiredCorrect) {
+    if (correctAnswersRef.current >= requiredCorrect) {
       addPokemon(currentOpponent);
       playVictory();
-      
+
       // Canvas confetti effect (replaces DOM nodes)
       try {
         const canvas = document.createElement("canvas");
@@ -162,11 +169,19 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
       } catch {}
 
       // Award badge if Gym Leader was defeated
-      if (difficulty === "leader" && gameState.currentRegion) {
+      if (level === "leader" && gameState.currentRegion) {
         addBadge(`${gameState.currentRegion.name}-Leader`);
         toast({
           title: `🏆 You defeated the ${gameState.currentRegion.name} Gym Leader!`,
           description: `You caught ${currentOpponent.name} and earned a badge!`,
+        });
+      } else if (typeof level === "number" && gameState.currentRegion) {
+        // Add completed level
+        const subject = gym.includes("Maths") ? "math" : gym.includes("Science") ? "science" : "coding";
+        addCompletedLevel(gameState.currentRegion.name, subject, level);
+        toast({
+          title: `You completed Level ${level} in ${gym}!`,
+          description: `You caught ${currentOpponent.name}!`,
         });
       } else {
         toast({
@@ -180,16 +195,17 @@ export function BattleScreen({ gym, difficulty }: BattleScreenProps) {
         setBattlePokemon(remainingPokemon);
         setCurrentQuestionIndex(0);
         setCorrectAnswers(0);
+        correctAnswersRef.current = 0;
         setSelectedAnswer(null);
         setIsAnswered(false);
       } else {
         setTimeout(() => setCurrentPage("gyms"), 2000);
       }
     } else {
-      toast({ 
-        title: "Not enough correct answers!", 
+      toast({
+        title: "Not enough correct answers!",
         description: `You need ${requiredCorrect} correct to win.`,
-        variant: "destructive" 
+        variant: "destructive"
       });
       setTimeout(() => setCurrentPage("gyms"), 1500);
     }

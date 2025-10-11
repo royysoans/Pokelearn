@@ -3,12 +3,12 @@ import { useGame } from "@/contexts/GameContext";
 import { PixelButton } from "./PixelButton";
 
 interface ArenaSelectionProps {
-  onStartBattle: (gym: string, difficulty: "easy" | "medium" | "hard" | "leader") => void;
+  onStartBattle: (gym: string, level: number | "leader") => void;
   onBack: () => void;
 }
 
 export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
-  const { gameState, setCurrentPage } = useGame();
+  const { gameState, setCurrentPage, isLevelCompleted, areAllSubjectLevelsCompleted } = useGame();
   const [selectedArena, setSelectedArena] = useState<string | null>(null);
   const [showLeaderConfirm, setShowLeaderConfirm] = useState(false);
   const region = gameState.currentRegion;
@@ -19,14 +19,16 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
     setSelectedArena(arena);
   };
 
-  const handleDifficultySelect = (difficulty: "easy" | "medium" | "hard") => {
+  const handleLevelSelect = (level: number) => {
     if (selectedArena) {
-      onStartBattle(selectedArena, difficulty);
+      onStartBattle(selectedArena, level);
     }
   };
 
   const handleLeaderChallenge = () => {
-    setShowLeaderConfirm(true);
+    if (region && areAllSubjectLevelsCompleted(region.name)) {
+      setShowLeaderConfirm(true);
+    }
   };
 
   const confirmLeaderBattle = () => {
@@ -57,53 +59,44 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
   }
 
   if (selectedArena && selectedArena !== "Gym Leader") {
+    const subject = selectedArena.includes("Maths") ? "math" : selectedArena.includes("Science") ? "science" : "coding";
+    const regionName = region?.name || "";
+
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="w-full max-w-4xl text-center">
+        <div className="w-full max-w-6xl text-center">
           <h2 className="text-2xl md:text-4xl mb-4 text-primary text-shadow-pixel">
             {region.symbol} {selectedArena}
           </h2>
-          <p className="text-muted-foreground mb-8">Select Difficulty</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-card border-4 border-border rounded-lg p-6">
-              <h3 className="text-xl md:text-2xl mb-2 text-primary">Easy</h3>
-              <p className="text-sm text-muted-foreground mb-2">5 Questions</p>
-              <p className="text-sm text-muted-foreground mb-4">Common Pokémon</p>
-              <PixelButton 
-                variant="success" 
-                onClick={() => handleDifficultySelect("easy")}
-                className="w-full"
-              >
-                Start Easy
-              </PixelButton>
-            </div>
+          <p className="text-muted-foreground mb-8">Select Level (10 questions each, all correct to pass)</p>
 
-            <div className="bg-card border-4 border-border rounded-lg p-6">
-              <h3 className="text-xl md:text-2xl mb-2 text-primary">Medium</h3>
-              <p className="text-sm text-muted-foreground mb-2">10 Questions</p>
-              <p className="text-sm text-muted-foreground mb-4">Uncommon Pokémon</p>
-              <PixelButton 
-                variant="primary" 
-                onClick={() => handleDifficultySelect("medium")}
-                className="w-full"
-              >
-                Start Medium
-              </PixelButton>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((level) => {
+              const isCompleted = isLevelCompleted(regionName, subject, level);
+              const isUnlocked = level === 1 || isLevelCompleted(regionName, subject, level - 1);
+              const pokemonRarity = level <= 3 ? "Common" : level <= 6 ? "Uncommon" : level <= 9 ? "Epic" : "Legendary";
 
-            <div className="bg-card border-4 border-border rounded-lg p-6">
-              <h3 className="text-xl md:text-2xl mb-2 text-primary">Hard</h3>
-              <p className="text-sm text-muted-foreground mb-2">15 Questions</p>
-              <p className="text-sm text-muted-foreground mb-4">Epic Pokémon</p>
-              <PixelButton 
-                variant="secondary" 
-                onClick={() => handleDifficultySelect("hard")}
-                className="w-full"
-              >
-                Start Hard
-              </PixelButton>
-            </div>
+              return (
+                <div
+                  key={level}
+                  className={`bg-card border-4 border-border rounded-lg p-4 ${
+                    isCompleted ? "bg-green-100 border-green-500" : ""
+                  } ${!isUnlocked ? "opacity-50" : ""}`}
+                >
+                  <h3 className="text-lg md:text-xl mb-2 text-primary">Level {level}</h3>
+                  <p className="text-xs text-muted-foreground mb-2">{pokemonRarity} Pokémon</p>
+                  {isCompleted && <p className="text-xs text-green-600 mb-2">✅ Completed</p>}
+                  <PixelButton
+                    variant={isCompleted ? "success" : "primary"}
+                    onClick={() => isUnlocked && handleLevelSelect(level)}
+                    disabled={!isUnlocked}
+                    className="w-full text-sm"
+                  >
+                    {isCompleted ? "Replay" : isUnlocked ? "Start" : "Locked"}
+                  </PixelButton>
+                </div>
+              );
+            })}
           </div>
 
           <PixelButton onClick={() => setSelectedArena(null)}>
@@ -153,12 +146,19 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
             <h3 className="text-xl md:text-2xl text-center">Coding Arena</h3>
           </div>
 
-          <div 
+          <div
             onClick={handleLeaderChallenge}
-            className="bg-secondary/90 border-4 border-border rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform"
+            className={`border-4 border-border rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform ${
+              region && areAllSubjectLevelsCompleted(region.name)
+                ? "bg-secondary/90"
+                : "bg-gray-500/50 opacity-50 cursor-not-allowed"
+            }`}
           >
             <h3 className="text-2xl md:text-3xl mb-2 text-secondary-foreground text-center">👑</h3>
             <h3 className="text-xl md:text-2xl text-center text-secondary-foreground">Gym Leader</h3>
+            {region && !areAllSubjectLevelsCompleted(region.name) && (
+              <p className="text-xs text-secondary-foreground/70 mt-2">Complete all levels first</p>
+            )}
           </div>
         </div>
 

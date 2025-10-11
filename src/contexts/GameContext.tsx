@@ -10,6 +10,9 @@ interface GameContextType {
   addBadge: (badge: string) => void;
   hasDefeatedGymLeader: (regionName: string) => boolean;
   addXP: (amount: number) => void;
+  addCompletedLevel: (regionName: string, subject: string, level: number) => void;
+  isLevelCompleted: (regionName: string, subject: string, level: number) => boolean;
+  areAllSubjectLevelsCompleted: (regionName: string) => boolean;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -24,6 +27,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     level: 1,
     xp: 0,
     xpToNextLevel: 100,
+    completedLevels: {},
   });
 
   const [currentPage, setCurrentPage] = useState<GamePage>("home");
@@ -66,8 +70,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       for (let i = levelThresholds.length - 1; i >= 0; i--) {
         if (newXP >= levelThresholds[i]) {
           newLevel = i + 1;
-          newXpToNextLevel = i < levelThresholds.length - 1 
-            ? levelThresholds[i + 1] 
+          newXpToNextLevel = i < levelThresholds.length - 1
+            ? levelThresholds[i + 1]
             : levelThresholds[i]; // Max level
           break;
         }
@@ -82,6 +86,40 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const addCompletedLevel = (regionName: string, subject: string, level: number) => {
+    setGameState(prev => {
+      const regionLevels = prev.completedLevels[regionName] || {};
+      const subjectLevels = regionLevels[subject] || [];
+      if (!subjectLevels.includes(level)) {
+        return {
+          ...prev,
+          completedLevels: {
+            ...prev.completedLevels,
+            [regionName]: {
+              ...regionLevels,
+              [subject]: [...subjectLevels, level].sort((a, b) => a - b),
+            },
+          },
+        };
+      }
+      return prev;
+    });
+  };
+
+  const isLevelCompleted = (regionName: string, subject: string, level: number) => {
+    return (gameState.completedLevels[regionName]?.[subject] || []).includes(level);
+  };
+
+  const areAllSubjectLevelsCompleted = (regionName: string) => {
+    const regionLevels = gameState.completedLevels[regionName];
+    if (!regionLevels) return false;
+    const subjects = ['math', 'science', 'coding'];
+    return subjects.every(subject => {
+      const levels = regionLevels[subject] || [];
+      return levels.length === 10 && levels.every((level, index) => level === index + 1);
+    });
+  };
+
   return (
     <GameContext.Provider
       value={{
@@ -93,6 +131,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
         addBadge,
         hasDefeatedGymLeader,
         addXP,
+        addCompletedLevel,
+        isLevelCompleted,
+        areAllSubjectLevelsCompleted,
       }}
     >
       {children}
