@@ -19,11 +19,11 @@ export function RegionMap() {
       <div className="w-full max-w-6xl">
         <LevelBar />
         
-        <h2 className="text-2xl md:text-4xl mb-8 text-center text-primary text-shadow-pixel">
+        <h2 className="text-xl sm:text-2xl md:text-4xl mb-8 text-center text-primary text-shadow-pixel">
           🗺️ Journey Through the Regions
         </h2>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {regions.map((region, index) => {
             const isUnlocked = index === 0 || hasDefeatedGymLeader(regions[index - 1].name);
             const isCompleted = hasDefeatedGymLeader(region.name);
@@ -52,11 +52,11 @@ export function RegionMap() {
                   {!isUnlocked && (
                     <div className="absolute top-2 left-2 text-2xl">🔒</div>
                   )}
-                  <span className="text-4xl md:text-5xl mb-2">{region.symbol}</span>
-                  <span className="text-xl md:text-2xl font-bold text-white text-shadow-pixel">
+                  <span className="text-3xl sm:text-4xl md:text-5xl mb-2">{region.symbol}</span>
+                  <span className="text-lg sm:text-xl md:text-2xl font-bold text-white text-shadow-pixel">
                     {region.name}
                   </span>
-                  <span className="text-sm text-white/80">{region.type}</span>
+                  <span className="text-xs sm:text-sm text-white/80">{region.type}</span>
                   {!isUnlocked && (
                     <p className="text-xs text-white/60 mt-2 text-center">
                       Defeat {regions[index - 1].name} Gym Leader

@@ -57,9 +57,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
 
       // For levels 1-10, always 10 questions
       questionCount = 10;
-      // Determine pokemon based on level: 1-3 easy, 4-6 medium, 7-9 hard, 10 epic
-      const levelDifficulty = level <= 3 ? "easy" : level <= 6 ? "medium" : level <= 9 ? "hard" : "epic";
-      pokemonKey = `${gym}-${levelDifficulty}`;
+      pokemonKey = `${gym}-${level}`;
 
       const pokemonId = arenaPokemonMap[regionName][pokemonKey];
       selectedPokemon = [pokemonDB[pokemonId]];
@@ -250,15 +248,15 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-2xl text-center">
-        <h2 className="text-xl md:text-2xl mb-2 text-primary text-shadow-pixel">
+        <h2 className="text-lg sm:text-xl md:text-2xl mb-2 text-primary text-shadow-pixel">
           {gym} Battle vs <span style={{ color: currentOpponent.color }}>{currentOpponent.name}</span>
         </h2>
-        <p className="text-sm md:text-base text-muted-foreground mb-4">
+        <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-4">
           Question {currentQuestionIndex + 1} / {questions.length} | Correct: {correctAnswers}
         </p>
 
         <div
-          className="relative w-full h-64 md:h-80 border-4 border-white rounded mb-6 overflow-hidden"
+          className="relative w-full h-48 sm:h-64 md:h-80 border-4 border-white rounded mb-6 overflow-hidden"
           style={{
             backgroundImage: `linear-gradient(rgba(17, 24, 39, 0.7), rgba(17, 24, 39, 0.7)), url(${background})`,
             backgroundSize: "cover",
@@ -269,15 +267,15 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
             <img
               src={currentOpponent.image}
               alt={currentOpponent.name}
-              className="pixelated h-32 md:h-40 animate-bounce-slow"
+              className="pixelated h-24 sm:h-32 md:h-40 animate-bounce-slow"
             />
           </div>
         </div>
 
-        <div className="bg-card border-4 border-border rounded p-6 mb-6">
-          <p className="text-base md:text-xl mb-6">{currentQuestion.q}</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-card border-4 border-border rounded p-4 sm:p-6 mb-6">
+          <p className="text-sm sm:text-base md:text-xl mb-6">{currentQuestion.q}</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {shuffledAnswers.map((answer) => {
               const isSelected = selectedAnswer === answer;
               const isCorrect = answer === currentQuestion.c;

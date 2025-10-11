@@ -90,6 +90,77 @@ Deno.serve({ port: PORT }, async (req: Request): Promise<Response> => {
 
     const { difficulty, flavor } = regionData[region ?? ""] || { difficulty: "intermediate", flavor: "Balanced difficulty." };
 
+    // Region-based topics
+    const regionTopics: Record<string, { math: string[], science: string[], technical: string[] }> = {
+      Kanto: {
+        math: ["3 digit addition", "subtraction", "2 digit multiplication", "division", "Remainder", "Quotient"],
+        science: ["Living and non Living things classification", "Very basic question on sense organs", "organ systems", "Water Cycle", "Types of animals(herbivores, carnivores,omnivores)"],
+        technical: ["Basics of Computers"]
+      },
+      Johto: {
+        math: ["Factors", "multiples", "Fraction addition", "subtraction"],
+        science: ["States of matter", "solar systems", "Pollution", "Reduce Reuse Recycle"],
+        technical: ["Basics of HTML"]
+      },
+      Hoenn: {
+        math: ["Expansions", "Factorizations", "LCM", "HCF"],
+        science: ["Basic of light", "sound", "magnetism"],
+        technical: ["Basics of CSS", "proper HTML"]
+      },
+      Sinnoh: {
+        math: ["Expansions", "Factorizations", "LCM", "HCF"],
+        science: ["Basic of light", "sound", "magnetism"],
+        technical: ["Basics of CSS", "proper HTML"]
+      },
+      Unova: {
+        math: ["Properties of Triangle", "Area of triangle", "rectangle", "square", "circle"],
+        science: ["Periodic Table upto 20 atomic number", "Plant System", "Force numericals"],
+        technical: ["Basics of Java"]
+      },
+      Kalos: {
+        math: ["Properties of Triangle", "Area of triangle", "rectangle", "square", "circle"],
+        science: ["Periodic Table upto 20 atomic number", "Plant System", "Force numericals"],
+        technical: ["Basics of Java"]
+      },
+      Alola: {
+        math: ["Trigonometry", "Simple and Compound Interest", "Indices"],
+        science: ["Basics of Organic Chemistry", "Chemical Bonding", "Metals and non Metals", "Pressure", "Friction"],
+        technical: ["Basics of Python"]
+      },
+      Galar: {
+        math: ["Trigonometry", "Simple and Compound Interest", "Indices"],
+        science: ["Basics of Organic Chemistry", "Chemical Bonding", "Metals and non Metals", "Pressure", "Friction"],
+        technical: ["Basics of Python"]
+      }
+    };
+
+    // Paired regions for gym leaders
+    const pairedRegions: Record<string, string[]> = {
+      Hoenn: ['Hoenn', 'Sinnoh'],
+      Sinnoh: ['Hoenn', 'Sinnoh'],
+      Unova: ['Unova', 'Kalos'],
+      Kalos: ['Unova', 'Kalos'],
+      Alola: ['Alola', 'Galar'],
+      Galar: ['Alola', 'Galar'],
+      Kanto: ['Kanto'],
+      Johto: ['Johto']
+    };
+
+    // Determine topics
+    let topics: string[] = [];
+    const subj = subject.toLowerCase();
+    if (gym) {
+      const regions = pairedRegions[region ?? 'Kanto'] || ['Kanto'];
+      topics = regions.flatMap(r => [
+        ...regionTopics[r].math,
+        ...regionTopics[r].science,
+        ...regionTopics[r].technical
+      ]);
+    } else {
+      const regions = [region ?? 'Kanto'];
+      topics = regions.flatMap(r => regionTopics[r][subj] || []);
+    }
+
     // System prompt
     const systemPrompt = `You are a quiz generator for an educational Pokémon learning game.
 CRITICAL: Respond ONLY with valid JSON:
@@ -104,6 +175,9 @@ CRITICAL: Respond ONLY with valid JSON:
 }
 Rules:
 - Generate exactly ${count} questions about ${subject}.
+- Generate questions only from these ${subject} topics: ${topics.join(', ')}.
+- Strictly adhere to the topics provided. Do not generate questions from any other topics or subjects.
+- Do not include topics or concepts from other subjects (Math, Science, Technical).
 - Region: ${region || "Kanto"}
 - Regional difficulty guideline: ${difficulty}
 - Gym: ${gym ?? "General"}
