@@ -43,7 +43,7 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
             Challenge the Gym Leader?
           </h2>
           <p className="text-base sm:text-lg md:text-xl mb-8 text-muted-foreground">
-            This is a difficult battle with 20 questions across all subjects. Are you ready?
+            This is a difficult battle with 15 questions across all subjects. Are you ready?
           </p>
           <div className="flex gap-4 justify-center">
             <PixelButton variant="success" onClick={confirmLeaderBattle} className="px-8 py-6">

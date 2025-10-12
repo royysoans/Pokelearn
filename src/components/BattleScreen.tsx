@@ -79,7 +79,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
 
   const currentOpponent = battlePokemon[0];
   const currentQuestion = questions[currentQuestionIndex];
-  const requiredCorrect = 5;
+  const requiredCorrect = level === "leader" ? 13 : 8;
 
   const handleAnswer = (answer: string) => {
     if (isAnswered) return;

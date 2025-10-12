@@ -149,17 +149,13 @@ Deno.serve({ port: PORT }, async (req: Request): Promise<Response> => {
     // Determine topics
     let topics: string[] = [];
     const subj = subject.toLowerCase();
-    if (gym) {
-      const regions = pairedRegions[region ?? 'Kanto'] || ['Kanto'];
-      topics = regions.flatMap(r => [
-        ...regionTopics[r].math,
-        ...regionTopics[r].science,
-        ...regionTopics[r].technical
-      ]);
+    let regions: string[];
+    if (gym === "Gym Leader") {
+      regions = pairedRegions[region ?? 'Kanto'] || ['Kanto'];
     } else {
-      const regions = [region ?? 'Kanto'];
-      topics = regions.flatMap(r => regionTopics[r][subj] || []);
+      regions = [region ?? 'Kanto'];
     }
+    topics = regions.flatMap(r => regionTopics[r][subj] || []);
 
     // System prompt
     const systemPrompt = `You are a quiz generator for an educational Pokémon learning game.
@@ -189,7 +185,7 @@ Rules:
 
     // Call Gemini 2.0
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
