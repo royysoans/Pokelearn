@@ -27,7 +27,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/src/assets/Kanto.jpg')" }}>
+    <div className="flex min-h-screen items-center justify-center p-4 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url('/Kanto.jpg')` }}>
       <div className="text-center animate-slide-in-up bg-black/50 p-8 rounded-lg backdrop-blur-sm">
         <h1 className="text-2xl sm:text-4xl md:text-6xl mb-6 text-primary text-shadow-pixel animate-bounce-slow">
           PokéLearn
