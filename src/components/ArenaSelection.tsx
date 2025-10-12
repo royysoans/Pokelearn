@@ -13,7 +13,19 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
   const [showLeaderConfirm, setShowLeaderConfirm] = useState(false);
   const region = gameState.currentRegion;
 
-  if (!region) return null;
+  if (!region) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="text-center">
+          <h2 className="text-2xl text-primary mb-4">No Region Selected</h2>
+          <p className="text-muted-foreground mb-6">Please select a region to continue your journey.</p>
+          <PixelButton onClick={() => setCurrentPage("regions")}>
+            Select Region
+          </PixelButton>
+        </div>
+      </div>
+    );
+  }
 
   const handleArenaSelect = (arena: string) => {
     setSelectedArena(arena);

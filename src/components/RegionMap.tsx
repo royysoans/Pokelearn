@@ -72,7 +72,7 @@ export function RegionMap() {
                   </span>
                   <span className="text-xs sm:text-sm text-white/80">{region.type}</span>
                   {!isUnlocked && (
-                    <p className="text-xs text-white/60 mt-2 text-center">
+                    <p className="text-xs text-white/60 mt-2 text-center break-words max-w-full">
                       Defeat {regions[index - 1].name} Gym Leader
                     </p>
                   )}
