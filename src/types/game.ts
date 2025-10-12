@@ -35,4 +35,4 @@ export interface GameState {
   completedLevels: Record<string, Record<string, number[]>>; // regionName -> subject -> completed levels [1-10]
 }
 
-export type GamePage = 'home' | 'starter' | 'regions' | 'gyms' | 'battle' | 'pokedex' | 'badges';
+export type GamePage = 'home' | 'login' | 'signup' | 'starter' | 'regions' | 'gyms' | 'battle' | 'pokedex' | 'badges' | 'leaderboard';

@@ -14,7 +14,134 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          id: string
+          name: string
+          created_at: string
+        }
+        Insert: {
+          id: string
+          name: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_badges: {
+        Row: {
+          id: number
+          user_id: string
+          badge: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          badge: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          badge?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_pokemons: {
+        Row: {
+          id: number
+          user_id: string
+          pokemon_id: number
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          pokemon_id: number
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          pokemon_id?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_pokemons_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_progress: {
+        Row: {
+          id: string
+          user_id: string
+          current_region: string | null
+          level: number
+          xp: number
+          xp_to_next_level: number
+          completed_levels: Json
+          coins: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          current_region?: string | null
+          level?: number
+          xp?: number
+          xp_to_next_level?: number
+          completed_levels?: Json
+          coins?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          current_region?: string | null
+          level?: number
+          xp?: number
+          xp_to_next_level?: number
+          completed_levels?: Json
+          coins?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

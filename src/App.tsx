@@ -1,3 +1,5 @@
+// src/App.tsx
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,8 +13,21 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
+  // debug: show Vite envs in console (remove when done)
+  useEffect(() => {
+    console.log("VITE_SUPABASE_URL =", import.meta.env.VITE_SUPABASE_URL);
+    console.log(
+      "VITE_SUPABASE_ANON_KEY present?",
+      !!import.meta.env.VITE_SUPABASE_ANON_KEY
+    );
+    console.log("VITE_FUNCTIONS_URL =", import.meta.env.VITE_FUNCTIONS_URL);
+  }, []);
+
   // Use your public MP3; filename added in public folder
-  const { muted, toggleMute } = useAudioBgm("/Pokemon Theme Song Instrumental~ - MK.mp3");
+  const { muted, toggleMute } = useAudioBgm(
+    "/Pokemon Theme Song Instrumental~ - MK.mp3"
+  );
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

@@ -32,7 +32,7 @@ export function RegionMap() {
     <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-b from-background to-muted">
       <div className="w-full max-w-6xl">
         <LevelBar />
-        
+
         <h2 className="text-xl sm:text-2xl md:text-4xl mb-8 text-center text-primary text-shadow-pixel">
           🗺️ Journey Through the Regions
         </h2>
@@ -50,7 +50,7 @@ export function RegionMap() {
                   isUnlocked ? `cursor-pointer hover:scale-105 border-${getRegionColor(region.name)}` : "cursor-not-allowed opacity-50 border-border"
                 } transition-transform`}
                 style={{
-                  backgroundImage: isUnlocked 
+                  backgroundImage: isUnlocked
                     ? `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${region.background})`
                     : `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url(${region.background})`,
                   backgroundSize: "cover",
@@ -82,9 +82,12 @@ export function RegionMap() {
           })}
         </div>
 
-        <div className="text-center">
+        <div className="text-center space-x-4">
           <PixelButton onClick={() => setCurrentPage("pokedex")}>
             View Pokédex
+          </PixelButton>
+          <PixelButton onClick={() => setCurrentPage("leaderboard")}>
+            Leaderboard
           </PixelButton>
         </div>
       </div>
