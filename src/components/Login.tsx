@@ -39,8 +39,8 @@ export function Login({ onSwitchToSignup }: LoginProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/src/assets/Kanto.jpg')" }}>
+      <div className="w-full max-w-md space-y-6 bg-black/50 p-8 rounded-lg backdrop-blur-sm">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-primary text-shadow-pixel mb-2">
             PokéLearn
