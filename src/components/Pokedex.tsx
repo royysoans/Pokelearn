@@ -39,15 +39,7 @@ export function Pokedex() {
                   <h3 className="text-lg font-bold mb-1" style={{ color: pokemon.color }}>{pokemon.name}</h3>
                   <p className="text-xs text-muted-foreground mb-2">{pokemon.desc}</p>
                   <div className="flex gap-2 justify-center text-xs">
-                    <span className={`px-2 py-1 rounded ${
-                      pokemon.type === "Fire" ? "bg-orange-500" :
-                      pokemon.type === "Water" ? "bg-blue-500" :
-                      pokemon.type === "Grass" ? "bg-green-500" :
-                      pokemon.type === "Electric" ? "bg-yellow-500 text-gray-900" :
-                      pokemon.type === "Ice" ? "bg-cyan-500" :
-                      pokemon.type === "Psychic" ? "bg-purple-500" :
-                      "bg-gray-500"
-                    } text-white`}>
+                    <span className={`px-2 py-1 rounded text-white bg-${pokemon.type.toLowerCase()}`}>
                       {pokemon.type}
                     </span>
                     <span className={`px-2 py-1 rounded ${

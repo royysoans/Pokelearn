@@ -6,6 +6,20 @@ import { LevelBar } from "./LevelBar";
 export function RegionMap() {
   const { setCurrentPage, setCurrentRegion, hasDefeatedGymLeader } = useGame();
 
+  const getRegionColor = (regionName: string) => {
+    const colors: Record<string, string> = {
+      Kanto: "fire",
+      Johto: "ground",
+      Hoenn: "electric",
+      Sinnoh: "grass",
+      Unova: "water",
+      Kalos: "fairy",
+      Alola: "ice",
+      Galar: "dark",
+    };
+    return colors[regionName] || "normal";
+  };
+
   const handleSelectRegion = (region: typeof regions[0], index: number) => {
     // Check if this is the first region or if previous gym leader was defeated
     if (index === 0 || hasDefeatedGymLeader(regions[index - 1].name)) {
@@ -32,8 +46,8 @@ export function RegionMap() {
               <div
                 key={region.name}
                 onClick={() => handleSelectRegion(region, index)}
-                className={`relative border-4 border-border rounded-lg overflow-hidden ${
-                  isUnlocked ? "cursor-pointer hover:scale-105" : "cursor-not-allowed opacity-50"
+                className={`relative border-4 rounded-lg overflow-hidden ${
+                  isUnlocked ? `cursor-pointer hover:scale-105 border-${getRegionColor(region.name)}` : "cursor-not-allowed opacity-50 border-border"
                 } transition-transform`}
                 style={{
                   backgroundImage: isUnlocked 

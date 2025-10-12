@@ -6,6 +6,7 @@ import { RegionMap } from "@/components/RegionMap";
 import { ArenaSelection } from "@/components/ArenaSelection";
 import { BattleScreen } from "@/components/BattleScreen";
 import { Pokedex } from "@/components/Pokedex";
+import { Badges } from "@/pages/Badges";
 import { useKonami } from "@/hooks/use-konami";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,6 +43,7 @@ function GameContent() {
         <BattleScreen gym={battleConfig.gym} level={battleConfig.level} />
       )}
       {currentPage === "pokedex" && <Pokedex />}
+      {currentPage === "badges" && <Badges />}
     </div>
   );
 }

@@ -19,6 +19,13 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
     setSelectedArena(arena);
   };
 
+  const getArenaColor = (arena: string) => {
+    if (arena.includes("Maths")) return "electric";
+    if (arena.includes("Science")) return "grass";
+    if (arena.includes("Coding")) return "psychic";
+    return "normal";
+  };
+
   const handleLevelSelect = (level: number) => {
     if (selectedArena) {
       onStartBattle(selectedArena, level);
@@ -122,25 +129,25 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 sm:gap-6 mb-8">
-          <div 
+          <div
             onClick={() => handleArenaSelect("Maths Arena")}
-            className="bg-card/90 border-4 border-border rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform"
+            className={`bg-card/90 border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform border-${getArenaColor("Maths Arena")}`}
           >
             <h3 className="text-xl sm:text-2xl md:text-3xl mb-2 text-primary text-center">🔢</h3>
             <h3 className="text-lg sm:text-xl md:text-2xl text-center">Maths Arena</h3>
           </div>
 
-          <div 
+          <div
             onClick={() => handleArenaSelect("Science Arena")}
-            className="bg-card/90 border-4 border-border rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform"
+            className={`bg-card/90 border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform border-${getArenaColor("Science Arena")}`}
           >
             <h3 className="text-xl sm:text-2xl md:text-3xl mb-2 text-primary text-center">🔬</h3>
             <h3 className="text-lg sm:text-xl md:text-2xl text-center">Science Arena</h3>
           </div>
 
-          <div 
+          <div
             onClick={() => handleArenaSelect("Coding Arena")}
-            className="bg-card/90 border-4 border-border rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform"
+            className={`bg-card/90 border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform border-${getArenaColor("Coding Arena")}`}
           >
             <h3 className="text-xl sm:text-2xl md:text-3xl mb-2 text-primary text-center">💻</h3>
             <h3 className="text-lg sm:text-xl md:text-2xl text-center">Coding Arena</h3>
@@ -148,10 +155,10 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
 
           <div
             onClick={handleLeaderChallenge}
-            className={`border-4 border-border rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform ${
+            className={`border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform ${
               region && areAllSubjectLevelsCompleted(region.name)
-                ? "bg-secondary/90"
-                : "bg-gray-500/50 opacity-50 cursor-not-allowed"
+                ? "bg-secondary/90 border-dragon"
+                : "bg-gray-500/50 opacity-50 cursor-not-allowed border-border"
             }`}
           >
             <h3 className="text-xl sm:text-2xl md:text-3xl mb-2 text-secondary-foreground text-center">👑</h3>
@@ -165,6 +172,9 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
         <div className="flex flex-wrap gap-4 justify-center">
           <PixelButton variant="primary" onClick={() => setCurrentPage("pokedex")}>
             Pokédex ({gameState.pokemon.length})
+          </PixelButton>
+          <PixelButton variant="secondary" onClick={() => setCurrentPage("badges")}>
+            Badges ({gameState.badges.length})
           </PixelButton>
           <PixelButton onClick={onBack}>
             Back to Map

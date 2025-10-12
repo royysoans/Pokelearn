@@ -25,6 +25,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [shuffledAnswers, setShuffledAnswers] = useState<string[]>([]);
+  const [showNextButton, setShowNextButton] = useState(false);
 
   useEffect(() => {
     if (!gameState.currentRegion) return;
@@ -86,6 +87,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
 
     setSelectedAnswer(answer);
     setIsAnswered(true);
+    setShowNextButton(true);
 
     const isCorrect = answer === currentQuestion.c;
     if (isCorrect) {
@@ -98,17 +100,18 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
       toast({ title: "Wrong answer!", variant: "destructive" });
       playWrong();
     }
+  };
 
-    setTimeout(() => {
-      if (currentQuestionIndex + 1 >= questions.length) {
-        handleBattleEnd();
-      } else {
-        setCurrentQuestionIndex(prev => prev + 1);
-        setSelectedAnswer(null);
-        setIsAnswered(false);
-        setShuffledAnswers([]); // Reset shuffled answers for next question
-      }
-    }, 1000);
+  const handleNext = () => {
+    if (currentQuestionIndex + 1 >= questions.length) {
+      handleBattleEnd();
+    } else {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setSelectedAnswer(null);
+      setIsAnswered(false);
+      setShowNextButton(false);
+      setShuffledAnswers([]); // Reset shuffled answers for next question
+    }
   };
 
   // Shuffle answers only once when question changes
@@ -244,6 +247,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   }
 
   const background = gameState.currentRegion?.background || "";
+  const battleGradient = "bg-gradient-to-br from-fighting via-fire to-electric";
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -256,7 +260,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
         </p>
 
         <div
-          className="relative w-full h-48 sm:h-64 md:h-80 border-4 border-white rounded mb-6 overflow-hidden"
+          className={`relative w-full h-48 sm:h-64 md:h-80 border-4 border-white rounded mb-6 overflow-hidden ${battleGradient}`}
           style={{
             backgroundImage: `linear-gradient(rgba(17, 24, 39, 0.7), rgba(17, 24, 39, 0.7)), url(${background})`,
             backgroundSize: "cover",
@@ -279,25 +283,39 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
             {shuffledAnswers.map((answer) => {
               const isSelected = selectedAnswer === answer;
               const isCorrect = answer === currentQuestion.c;
-              
+
               let variant: "primary" | "success" | "secondary" = "primary";
-              if (isAnswered && isSelected) {
-                variant = isCorrect ? "success" : "secondary";
+              if (isAnswered) {
+                if (isCorrect) {
+                  variant = "success"; // Green for correct
+                } else if (isSelected) {
+                  variant = "secondary"; // Red for wrong selected
+                }
               }
-              
+
               return (
-                <PixelButton
-                  key={answer}
-                  variant={variant}
-                  onClick={() => handleAnswer(answer)}
-                  disabled={isAnswered}
-                  className="py-4"
-                >
-                  {answer}
-                </PixelButton>
+                <div className="w-full">
+                  <PixelButton
+                    key={answer}
+                    variant={variant}
+                    onClick={() => handleAnswer(answer)}
+                    disabled={isAnswered}
+                    className="py-3 px-2 w-full text-center text-sm leading-tight break-words whitespace-normal min-h-[60px] justify-center"
+                  >
+                    {answer}
+                  </PixelButton>
+                </div>
               );
             })}
           </div>
+
+          {showNextButton && (
+            <div className="mt-4">
+              <PixelButton variant="primary" onClick={handleNext}>
+                Next Question
+              </PixelButton>
+            </div>
+          )}
         </div>
 
         <PixelButton onClick={() => setCurrentPage("gyms")}>

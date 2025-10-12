@@ -33,12 +33,37 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [currentPage, setCurrentPage] = useState<GamePage>("home");
 
   const addPokemon = (pokemon: Pokemon) => {
-    setGameState(prev => ({
-      ...prev,
-      pokemon: prev.pokemon.some(p => p.id === pokemon.id)
+    setGameState(prev => {
+      const newPokemon = prev.pokemon.some(p => p.id === pokemon.id)
         ? prev.pokemon
-        : [...prev.pokemon, pokemon],
-    }));
+        : [...prev.pokemon, pokemon];
+
+      // Check for Pokémon badges
+      const commonCount = newPokemon.filter(p => p.rarity === 'common').length;
+      const uncommonCount = newPokemon.filter(p => p.rarity === 'uncommon').length;
+
+      const newBadges = [...prev.badges];
+
+      const commonThresholds = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+      commonThresholds.forEach(threshold => {
+        if (commonCount >= threshold && !newBadges.includes(`common-${threshold}`)) {
+          newBadges.push(`common-${threshold}`);
+        }
+      });
+
+      const uncommonThresholds = [5, 10, 15, 20, 25];
+      uncommonThresholds.forEach(threshold => {
+        if (uncommonCount >= threshold && !newBadges.includes(`uncommon-${threshold}`)) {
+          newBadges.push(`uncommon-${threshold}`);
+        }
+      });
+
+      return {
+        ...prev,
+        pokemon: newPokemon,
+        badges: newBadges,
+      };
+    });
   };
 
   const setCurrentRegion = (region: Region | null) => {
@@ -91,15 +116,28 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const regionLevels = prev.completedLevels[regionName] || {};
       const subjectLevels = regionLevels[subject] || [];
       if (!subjectLevels.includes(level)) {
+        const newCompletedLevels = {
+          ...prev.completedLevels,
+          [regionName]: {
+            ...regionLevels,
+            [subject]: [...subjectLevels, level].sort((a, b) => a - b),
+          },
+        };
+
+        // Check for arena badge
+        const newBadges = [...prev.badges];
+        const badgeId = `${regionName.toLowerCase()}-${subject}-arena`;
+        if (!newBadges.includes(badgeId)) {
+          const levels = newCompletedLevels[regionName][subject];
+          if (levels.length === 10 && levels.every((l, i) => l === i + 1)) {
+            newBadges.push(badgeId);
+          }
+        }
+
         return {
           ...prev,
-          completedLevels: {
-            ...prev.completedLevels,
-            [regionName]: {
-              ...regionLevels,
-              [subject]: [...subjectLevels, level].sort((a, b) => a - b),
-            },
-          },
+          completedLevels: newCompletedLevels,
+          badges: newBadges,
         };
       }
       return prev;
