@@ -122,11 +122,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
         xp: progress?.xp || 0,
         xpToNextLevel: progress?.xp_to_next_level || 100,
         completedLevels: (progress?.completed_levels as Record<string, Record<string, number[]>>) || {},
-        currentPage: (progress?.current_page as GamePage) || "home",
+        currentPage: "home", // Always start on home page
       };
 
       setGameState(loadedState);
-      setCurrentPage(loadedState.currentPage);
+      setCurrentPage("home"); // Always start on home page
     } catch (error) {
       console.error('Error loading game state:', error);
     }

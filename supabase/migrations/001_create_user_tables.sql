@@ -5,11 +5,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable RLS for profiles
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own profile" ON public.profiles
-  FOR SELECT USING (auth.uid() = id);
+-- Disable RLS for profiles (public leaderboard data)
+ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can insert own profile" ON public.profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
@@ -25,11 +22,8 @@ CREATE TABLE IF NOT EXISTS public.user_pokemons (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable RLS for user_pokemons
-ALTER TABLE public.user_pokemons ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own pokemons" ON public.user_pokemons
-  FOR SELECT USING (auth.uid() = user_id);
+-- Disable RLS for user_pokemons (public leaderboard data)
+ALTER TABLE public.user_pokemons DISABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can insert own pokemons" ON public.user_pokemons
   FOR INSERT WITH CHECK (auth.uid() = user_id);

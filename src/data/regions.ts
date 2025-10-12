@@ -70,7 +70,7 @@ export const regions: Region[] = [
     symbol: "⬜",
     type: "Gen 8",
     pokemonIds: [80, 81, 82, 83, 84, 85, 86, 87, 88, 89],
-    gyms: ["Maths Arena", "Science Arena", "Gym Leader"],
+    gyms: ["Maths Arena", "Science Arena", "Coding Arena", "Gym Leader"],
     background: galarImg,
   },
 ];
