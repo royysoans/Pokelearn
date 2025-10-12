@@ -29,7 +29,7 @@ export function RegionMap() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-b from-background to-muted">
+    <div className="flex min-h-screen items-center justify-center p-4" style={{ backgroundColor: '#0c07b4', backgroundImage: `url(/src/assets/bhoot.webp)`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <div className="w-full max-w-6xl">
         <LevelBar />
 

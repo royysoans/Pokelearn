@@ -1,7 +1,3 @@
-// supabase/functions/generate-quiz/index.ts
-// Deno Edge Function for quiz generation
-// Run locally with:
-// deno run --allow-net --allow-env --allow-read --env-file=.env supabase/functions/generate-quiz/index.ts
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
