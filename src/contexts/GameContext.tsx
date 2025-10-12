@@ -38,6 +38,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     xp: 0,
     xpToNextLevel: 100,
     completedLevels: {},
+    currentPage: "home",
   });
 
   const [currentPage, setCurrentPage] = useState<GamePage>("home");
@@ -64,6 +65,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         xp: 0,
         xpToNextLevel: 100,
         completedLevels: {},
+        currentPage: "home",
       });
     }
   }, [user]);
@@ -120,16 +122,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
         xp: progress?.xp || 0,
         xpToNextLevel: progress?.xp_to_next_level || 100,
         completedLevels: (progress?.completed_levels as Record<string, Record<string, number[]>>) || {},
+        currentPage: (progress?.current_page as GamePage) || "home",
       };
 
       setGameState(loadedState);
-
-      // If user has pokemon, skip starter selection
-      if (loadedState.pokemon.length > 0) {
-        setCurrentPage("home");
-      } else {
-        setCurrentPage("home");
-      }
+      setCurrentPage(loadedState.currentPage);
     } catch (error) {
       console.error('Error loading game state:', error);
     }
@@ -153,6 +150,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
             xp_to_next_level: gameState.xpToNextLevel,
             completed_levels: gameState.completedLevels,
             coins: gameState.coins,
+            current_page: currentPage,
           },
           { onConflict: 'user_id' }
         );
