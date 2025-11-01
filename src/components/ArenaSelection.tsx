@@ -55,8 +55,17 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
   };
 
   if (showLeaderConfirm) {
+    const backgroundImage = region.name === "Kanto" ? "/mewtwo.png" : "";
+
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
+      <div
+        className="flex min-h-screen items-center justify-center p-4"
+        style={backgroundImage ? {
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        } : {}}
+      >
         <div className="w-full max-w-2xl text-center bg-card border-4 border-border rounded-lg p-8">
           <h2 className="text-2xl sm:text-3xl md:text-4xl mb-6 text-primary text-shadow-pixel">
             Challenge the Gym Leader?
@@ -80,9 +89,37 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
   if (selectedArena && selectedArena !== "Gym Leader") {
     const subject = selectedArena.includes("Maths") ? "math" : selectedArena.includes("Science") ? "science" : "coding";
     const regionName = region?.name || "";
+    const isMathsArena = selectedArena.includes("Maths");
+    const isScienceArena = selectedArena.includes("Science");
+
+    const getBackgroundStyle = () => {
+      if (isMathsArena) {
+        return {
+          backgroundImage: `url(/image.png)`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        };
+      } else if (isScienceArena) {
+        return {
+          backgroundImage: `url(/image2.png)`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        };
+      } else if (selectedArena.includes("Coding")) {
+        return {
+          backgroundImage: `url(/image3.png)`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        };
+      }
+      return {};
+    };
 
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
+      <div
+        className="flex min-h-screen items-center justify-center p-4"
+        style={getBackgroundStyle()}
+      >
         <div className="w-full max-w-6xl text-center">
           <h2 className="text-xl sm:text-2xl md:text-4xl mb-4 text-primary text-shadow-pixel">
             {region.symbol} {selectedArena}
@@ -127,7 +164,7 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
   }
 
   return (
-    <div 
+    <div
       className="flex min-h-screen items-center justify-center p-4"
       style={{
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${region.background})`,
