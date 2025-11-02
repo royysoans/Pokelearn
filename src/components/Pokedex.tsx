@@ -1,5 +1,6 @@
 import { useGame } from "@/contexts/GameContext";
 import { PixelButton } from "./PixelButton";
+import { ShareButtons } from "./ShareButtons";
 
 export function Pokedex() {
   const { gameState, setCurrentPage } = useGame();
@@ -54,7 +55,10 @@ export function Pokedex() {
               ))}
             </div>
 
-            <div className="text-center">
+            <div className="text-center space-y-4">
+              <ShareButtons
+                message={`I caught ${gameState.pokemon.length} Pokémon! Think you can catch up?`}
+              />
               <PixelButton onClick={() => setCurrentPage("gyms")}>
                 Back to Gyms
               </PixelButton>

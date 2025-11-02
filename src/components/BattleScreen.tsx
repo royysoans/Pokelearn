@@ -5,6 +5,7 @@ import { arenaPokemonMap } from "@/data/arenaPokemon";
 import { generateQuestions } from "@/data/questions";
 import { Question, Pokemon } from "@/types/game";
 import { PixelButton } from "./PixelButton";
+import { ShareButtons } from "./ShareButtons";
 import { useToast } from "@/hooks/use-toast";
 import { useSound } from "@/hooks/use-sound";
 
@@ -26,6 +27,8 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   const [isAnswered, setIsAnswered] = useState(false);
   const [shuffledAnswers, setShuffledAnswers] = useState<string[]>([]);
   const [showNextButton, setShowNextButton] = useState(false);
+  const [showShareButtons, setShowShareButtons] = useState(false);
+  const [shareMessage, setShareMessage] = useState("");
 
 
 
@@ -179,6 +182,8 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
           title: `🏆 You defeated the ${gameState.currentRegion.name} Gym Leader!`,
           description: `You caught ${currentOpponent.name} and earned a badge!`,
         });
+        setShowShareButtons(true);
+        setShareMessage(`I just defeated ${currentOpponent.name} in the ${gameState.currentRegion.name} region! Can you beat me?`);
       } else if (typeof level === "number" && gameState.currentRegion) {
         // Add completed level
         const subject = gym.includes("Maths") ? "math" : gym.includes("Science") ? "science" : "coding";
@@ -323,6 +328,12 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
             </div>
           )}
         </div>
+
+        {showShareButtons && (
+          <div className="mb-4">
+            <ShareButtons message={shareMessage} />
+          </div>
+        )}
 
         <PixelButton onClick={() => setCurrentPage("gyms")}>
           Flee Battle
