@@ -216,6 +216,10 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
         correctAnswersRef.current = 0;
         setSelectedAnswer(null);
         setIsAnswered(false);
+      } else {
+        if (level !== "leader") {
+          setTimeout(() => setCurrentPage("gyms"), 2000);
+        }
       }
     } else {
       toast({
@@ -339,7 +343,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
           </div>
         )}
 
-        <PixelButton onClick={() => setCurrentPage("gyms")} disabled={!battleEnded}>
+        <PixelButton onClick={() => setCurrentPage("gyms")} disabled={!battleEnded && level === "leader"}>
           {buttonText}
         </PixelButton>
       </div>
