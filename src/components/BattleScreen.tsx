@@ -27,6 +27,8 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   const [shuffledAnswers, setShuffledAnswers] = useState<string[]>([]);
   const [showNextButton, setShowNextButton] = useState(false);
 
+
+
   useEffect(() => {
     if (!gameState.currentRegion) return;
 
@@ -254,7 +256,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   const battleGradient = "bg-gradient-to-br from-fighting via-fire to-electric";
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center p-4" style={gameState.currentRegion?.name === "Kanto" ? { backgroundImage: `url(/kanto_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
       <div className="w-full max-w-2xl text-center">
         <h2 className="text-lg sm:text-xl md:text-2xl mb-2 text-primary text-shadow-pixel">
           {gym} Battle vs <span style={{ color: currentOpponent.color }}>{currentOpponent.name}</span>
