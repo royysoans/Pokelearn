@@ -6,7 +6,7 @@ export function Leaderboard() {
   const { setCurrentPage } = useGame();
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen p-4" style={{ backgroundImage: 'url(/Lead.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-2xl sm:text-4xl md:text-6xl mb-4 text-primary text-shadow-pixel animate-bounce-slow">

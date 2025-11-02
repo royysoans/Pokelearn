@@ -243,7 +243,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const hasDefeatedGymLeader = (regionName: string) =>
-    gameState.badges.includes(`${regionName}-Leader`);
+    gameState.badges.includes(`${regionName}-Leader`) || gameState.badges.includes(`${regionName.toLowerCase()}-leader`);
 
   const levelThresholds = [
     0, 20, 45, 85, 145, 225, 325, 450, 600, 775, 975, 1225,
