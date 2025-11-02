@@ -1,8 +1,7 @@
-"use client";
-import * as THREE from "three";
-import { useEffect } from "react";
+import React, { useEffect } from 'react';
+import * as THREE from 'three';
 
-export default function PokeCursor() {
+const Cursor: React.FC = () => {
   useEffect(() => {
     // Create renderer
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -40,7 +39,7 @@ export default function PokeCursor() {
     scene.add(ambientLight, pointLight);
 
     // Pokéball parts
-    const radius = 0.5;
+    const radius = 0.7;
 
     const topMaterial = new THREE.MeshStandardMaterial({
       color: 0xff0000,
@@ -116,4 +115,6 @@ export default function PokeCursor() {
   }, []);
 
   return null;
-}
+};
+
+export default Cursor;

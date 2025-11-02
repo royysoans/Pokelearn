@@ -14,7 +14,7 @@ interface BattleScreenProps {
 }
 
 export function BattleScreen({ gym, level }: BattleScreenProps) {
-  const { gameState, setCurrentPage, addPokemon, addBadge, addXP, addCompletedLevel } = useGame();
+  const { gameState, setCurrentPage, addPokemon, addBadge, addXP, addCompletedLevel, saveNow } = useGame();
   const { toast } = useToast();
   const { playCorrect, playWrong, playVictory } = useSound();
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -190,6 +190,9 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
           description: currentOpponent.desc,
         });
       }
+
+      // Force immediate save to persist caught Pokemon and badges
+      saveNow();
 
       const remainingPokemon = battlePokemon.slice(1);
       if (remainingPokemon.length > 0) {

@@ -18,6 +18,7 @@ interface GameContextType {
   addCompletedLevel: (regionName: string, subject: string, level: number) => void;
   isLevelCompleted: (regionName: string, subject: string, level: number) => boolean;
   areAllSubjectLevelsCompleted: (regionName: string) => boolean;
+  saveNow: () => void;
   user: User | null;
 }
 
@@ -112,10 +113,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
         .eq('user_id', user.id);
       if (badgesError) throw badgesError;
 
+      const rawPokemon = userPokemons ? userPokemons.map(p => pokemonDB[p.pokemon_id]).filter(p => p) : [];
       const loadedState: GameState = {
         name: profile?.name || "Trainer",
         coins: progress?.coins || 50,
-        pokemon: userPokemons ? Array.from(new Map(userPokemons.map(p => [p.pokemon_id, pokemonDB[p.pokemon_id]] as [number, Pokemon]).filter(([_, p]) => p)).values()) : [],
+        pokemon: Array.from(new Map(rawPokemon.map(p => [p.id, p])).values()),
         badges: [...new Set(userBadges?.map(b => b.badge) || [])],
         currentRegion: progress?.current_region ? regions.find(r => r.name === progress.current_region) || null : null,
         level: progress?.level || 1,
@@ -284,6 +286,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const saveNow = () => {
+    saveGameState();
+  };
+
   return (
     <GameContext.Provider
       value={{
@@ -298,6 +304,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         addCompletedLevel,
         isLevelCompleted,
         areAllSubjectLevelsCompleted,
+        saveNow,
         user,
       }}
     >

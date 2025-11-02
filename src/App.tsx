@@ -9,7 +9,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Cursor from "./components/Cursor";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +34,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <Cursor />
+
           {/* Global mute button */}
           <button
             onClick={toggleMute}

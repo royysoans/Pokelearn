@@ -2,11 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-html, body, button, a, input, textarea, select {
-  cursor: none !important;
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
+ All colors MUST be HSL.
+ */
+
+html, body, button, a, input, textarea, select, * {
+  cursor: url('/Pokeballll_cursor.png') 48 48, auto !important;
 }
 
 @layer base {
@@ -93,13 +94,11 @@ html, body, button, a, input, textarea, select {
 @layer base {
   * {
     @apply border-border;
-    cursor: none !important;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: 'Press Start 2P', cursive;
-    cursor: none !important;
   }
   
   h1, h2, h3, h4, h5, h6 {
