@@ -1,9 +1,11 @@
 import { useGame } from "@/contexts/GameContext";
 import { PixelButton } from "./PixelButton";
 import { ShareButtons } from "./ShareButtons";
+import { useState } from "react";
 
 export function Pokedex() {
   const { gameState, setCurrentPage } = useGame();
+  const [selectedPokemon, setSelectedPokemon] = useState(null);
 
   return (
     <div className="min-h-screen p-4 md:p-8">
@@ -30,7 +32,8 @@ export function Pokedex() {
               {gameState.pokemon.map((pokemon) => (
                 <div
                   key={pokemon.id}
-                  className="bg-card border-4 border-border rounded p-4 text-center hover:border-primary transition-colors"
+                  className="bg-card border-4 border-border rounded p-4 text-center hover:border-primary transition-colors cursor-pointer"
+                  onClick={() => setSelectedPokemon(pokemon)}
                 >
                   <img
                     src={pokemon.image}
@@ -64,6 +67,32 @@ export function Pokedex() {
               </PixelButton>
             </div>
           </>
+        )}
+
+        {selectedPokemon && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300" onClick={() => setSelectedPokemon(null)}>
+            <div className="bg-card border-4 border-border rounded p-6 text-center max-w-sm mx-4 transform scale-100 transition-transform duration-300" onClick={(e) => e.stopPropagation()}>
+              <img
+                src={selectedPokemon.image}
+                alt={selectedPokemon.name}
+                className="pixelated w-48 h-48 mx-auto mb-4"
+              />
+              <h3 className="text-2xl font-bold mb-2 break-words" style={{ color: selectedPokemon.color }}>{selectedPokemon.name}</h3>
+              <p className="text-sm text-muted-foreground mb-4">{selectedPokemon.desc}</p>
+              <div className="flex gap-2 justify-center text-sm">
+                <span className={`px-3 py-1 rounded text-white bg-${selectedPokemon.type.toLowerCase()}`}>
+                  {selectedPokemon.type}
+                </span>
+                <span className={`px-3 py-1 rounded ${
+                  selectedPokemon.rarity === "legendary" ? "bg-purple-600" :
+                  selectedPokemon.rarity === "uncommon" ? "bg-blue-600" :
+                  "bg-gray-600"
+                } text-white`}>
+                  {selectedPokemon.rarity}
+                </span>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
