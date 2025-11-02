@@ -171,7 +171,8 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
 
       // Award badge if Gym Leader was defeated
       if (level === "leader" && gameState.currentRegion) {
-        addBadge(`${gameState.currentRegion.name}-Leader`);
+        const badgeId = `${gameState.currentRegion.name.toLowerCase()}-leader`;
+        addBadge(badgeId);
         toast({
           title: `🏆 You defeated the ${gameState.currentRegion.name} Gym Leader!`,
           description: `You caught ${currentOpponent.name} and earned a badge!`,

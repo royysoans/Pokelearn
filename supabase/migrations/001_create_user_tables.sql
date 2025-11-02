@@ -5,8 +5,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Disable RLS for profiles (public leaderboard data)
-ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can insert own profile" ON public.profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
@@ -14,7 +13,7 @@ CREATE POLICY "Users can insert own profile" ON public.profiles
 CREATE POLICY "Users can update own profile" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
 
--- Create user_pokemons table
+-- user_pokemons table
 CREATE TABLE IF NOT EXISTS public.user_pokemons (
   id SERIAL PRIMARY KEY,
   user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
@@ -22,8 +21,7 @@ CREATE TABLE IF NOT EXISTS public.user_pokemons (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Disable RLS for user_pokemons (public leaderboard data)
-ALTER TABLE public.user_pokemons DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_pokemons ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can insert own pokemons" ON public.user_pokemons
   FOR INSERT WITH CHECK (auth.uid() = user_id);
@@ -31,7 +29,7 @@ CREATE POLICY "Users can insert own pokemons" ON public.user_pokemons
 CREATE POLICY "Users can update own pokemons" ON public.user_pokemons
   FOR UPDATE USING (auth.uid() = user_id);
 
--- Create user_badges table
+-- user_badges table
 CREATE TABLE IF NOT EXISTS public.user_badges (
   id SERIAL PRIMARY KEY,
   user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
@@ -39,7 +37,6 @@ CREATE TABLE IF NOT EXISTS public.user_badges (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable RLS for user_badges
 ALTER TABLE public.user_badges ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own badges" ON public.user_badges
@@ -51,7 +48,7 @@ CREATE POLICY "Users can insert own badges" ON public.user_badges
 CREATE POLICY "Users can update own badges" ON public.user_badges
   FOR UPDATE USING (auth.uid() = user_id);
 
--- Create user_progress table
+-- user_progress table
 CREATE TABLE IF NOT EXISTS public.user_progress (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
@@ -64,7 +61,6 @@ CREATE TABLE IF NOT EXISTS public.user_progress (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable RLS for user_progress
 ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own progress" ON public.user_progress
@@ -81,15 +77,13 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (id, name)
-  VALUES (new.id, new.raw_user_meta_data->>'name');
-  RETURN new;
+  VALUES (NEW.id, NEW.raw_user_meta_data->>'name');
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger the function on new user creation
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
--- Ensure single progress entry per user
 CREATE UNIQUE INDEX IF NOT EXISTS user_progress_user_id_idx ON public.user_progress (user_id);

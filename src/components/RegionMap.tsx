@@ -55,7 +55,7 @@ export function RegionMap() {
                     : `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url(${region.background})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
-                  filter: isUnlocked ? "none" : "blur(4px)",
+                  filter: "none",
                   minHeight: "200px",
                 }}
               >

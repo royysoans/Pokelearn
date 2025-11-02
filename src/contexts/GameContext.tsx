@@ -86,63 +86,79 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const loadGameState = async () => {
     if (!user) return;
 
+    console.log("🔄 Loading game state for user:", user.id);
+
     try {
       const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("name")
+        .eq("id", user.id)
         .single();
       if (profileError) throw profileError;
 
       const { data: progress, error: progressError } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', user.id)
+        .from("user_progress")
+        .select("*")
+        .eq("user_id", user.id)
         .single();
-      if (progressError && progressError.code !== 'PGRST116') throw progressError; // allow no progress yet
+      if (progressError && progressError.code !== "PGRST116") throw progressError;
 
       const { data: userPokemons, error: pokemonError } = await supabase
-        .from('user_pokemons')
-        .select('pokemon_id')
-        .eq('user_id', user.id);
+        .from("user_pokemons")
+        .select("pokemon_id")
+        .eq("user_id", user.id);
       if (pokemonError) throw pokemonError;
 
       const { data: userBadges, error: badgesError } = await supabase
-        .from('user_badges')
-        .select('badge')
-        .eq('user_id', user.id);
+        .from("user_badges")
+        .select("badge")
+        .eq("user_id", user.id);
       if (badgesError) throw badgesError;
 
-      const rawPokemon = userPokemons ? userPokemons.map(p => pokemonDB[p.pokemon_id]).filter(p => p) : [];
+      const rawPokemon = userPokemons
+        ? userPokemons.map((p) => pokemonDB[p.pokemon_id]).filter(Boolean)
+        : [];
+
       const loadedState: GameState = {
         name: profile?.name || "Trainer",
         coins: progress?.coins || 50,
-        pokemon: Array.from(new Map(rawPokemon.map(p => [p.id, p])).values()),
-        badges: [...new Set(userBadges?.map(b => b.badge) || [])],
-        currentRegion: progress?.current_region ? regions.find(r => r.name === progress.current_region) || null : null,
+        pokemon: Array.from(new Map(rawPokemon.map((p) => [p.id, p])).values()),
+        badges: [...new Set(userBadges?.map((b) => b.badge) || [])],
+        currentRegion: progress?.current_region
+          ? regions.find((r) => r.name === progress.current_region) || null
+          : null,
         level: progress?.level || 1,
         xp: progress?.xp || 0,
         xpToNextLevel: progress?.xp_to_next_level || 100,
-        completedLevels: (progress?.completed_levels as Record<string, Record<string, number[]>>) || {},
-        currentPage: "home", // Always start on home page
+        completedLevels: (progress?.completed_levels as Record<
+          string,
+          Record<string, number[]>
+        >) || {},
+        currentPage: "home",
       };
 
       setGameState(loadedState);
-      setCurrentPage("home"); // Always start on home page
-    } catch (error) {
-      console.error('Error loading game state:', error);
+      setCurrentPage("home");
+      console.log("✅ Game state loaded successfully");
+    } catch (error: any) {
+      console.error("❌ Error loading game state:", error.message || error);
     }
   };
 
   // ---------------- SAVE STATE ----------------
   const saveGameState = async (overrideUser?: User | null) => {
     const userToUse = overrideUser || user;
-    if (!userToUse) return;
+    if (!userToUse) {
+      console.warn("⚠️ No user found — skipping save");
+      return;
+    }
+
+    console.log("💾 Saving game state for user:", userToUse.id);
+    console.log("📦 Pokémon count:", gameState.pokemon.length, "Badges:", gameState.badges.length);
 
     try {
-      // Upsert user_progress
       const { error: progressError } = await supabase
-        .from('user_progress')
+        .from("user_progress")
         .upsert(
           {
             user_id: userToUse.id,
@@ -154,74 +170,73 @@ export function GameProvider({ children }: { children: ReactNode }) {
             coins: gameState.coins,
             current_page: currentPage,
           },
-          { onConflict: 'user_id' }
+          { onConflict: "user_id" }
         );
       if (progressError) throw progressError;
+      console.log("✅ Progress saved");
 
-      // Save pokemons
-      await supabase.from('user_pokemons').delete().eq('user_id', userToUse.id);
+      const { error: delPokeErr } = await supabase.from("user_pokemons").delete().eq("user_id", userToUse.id);
+      if (delPokeErr) throw delPokeErr;
+
       if (gameState.pokemon.length > 0) {
-        const pokemonInserts = gameState.pokemon.map(p => ({
+        const pokemonInserts = gameState.pokemon.map((p) => ({
           user_id: userToUse.id,
           pokemon_id: p.id,
         }));
-        const { error: pokemonError } = await supabase
-          .from('user_pokemons')
-          .insert(pokemonInserts);
+        const { error: pokemonError } = await supabase.from("user_pokemons").insert(pokemonInserts);
         if (pokemonError) throw pokemonError;
+        console.log("✅ Pokémon saved:", pokemonInserts);
       }
 
-      // Save badges
-      await supabase.from('user_badges').delete().eq('user_id', userToUse.id);
+      const { error: delBadgeErr } = await supabase.from("user_badges").delete().eq("user_id", userToUse.id);
+      if (delBadgeErr) throw delBadgeErr;
+
       if (gameState.badges.length > 0) {
-        const badgeInserts = gameState.badges.map(badge => ({
+        const badgeInserts = gameState.badges.map((b) => ({
           user_id: userToUse.id,
-          badge,
+          badge: b,
         }));
-        const { error: badgesError } = await supabase
-          .from('user_badges')
-          .insert(badgeInserts);
-        if (badgesError) throw badgesError;
+        const { error: badgeErr } = await supabase.from("user_badges").insert(badgeInserts);
+        if (badgeErr) throw badgeErr;
+        console.log("✅ Badges saved:", badgeInserts);
       }
-    } catch (error) {
-      console.error('Error saving game state:', error);
+
+    } catch (error: any) {
+      console.error("❌ Error saving game state:", error.message || error);
     }
   };
 
   // ---------------- GAME ACTIONS ----------------
   const addPokemon = (pokemon: Pokemon) => {
-    setGameState(prev => {
-      // Only add if it doesn't already exist
-      const newPokemon = prev.pokemon.some(p => p.id === pokemon.id)
+    setGameState((prev) => {
+      const newPokemon = prev.pokemon.some((p) => p.id === pokemon.id)
         ? prev.pokemon
         : [...prev.pokemon, pokemon];
-  
-      // Ensure no duplicates just in case
-      const uniquePokemon = Array.from(new Map(newPokemon.map(p => [p.id, p])).values());
-  
-      // Handle badges for common/uncommon Pokémon
-      const commonCount = uniquePokemon.filter(p => p.rarity === 'common').length;
-      const uncommonCount = uniquePokemon.filter(p => p.rarity === 'uncommon').length;
+      const uniquePokemon = Array.from(new Map(newPokemon.map((p) => [p.id, p])).values());
+
+      const commonCount = uniquePokemon.filter((p) => p.rarity === "common").length;
+      const uncommonCount = uniquePokemon.filter((p) => p.rarity === "uncommon").length;
       const newBadges = [...prev.badges];
-  
-      [5,10,15,20,25,30,35,40,45,50].forEach(threshold => {
-        if(commonCount >= threshold && !newBadges.includes(`common-${threshold}`)) newBadges.push(`common-${threshold}`);
+
+      [5, 10, 15, 20, 25, 30, 35, 40, 45, 50].forEach((threshold) => {
+        if (commonCount >= threshold && !newBadges.includes(`common-${threshold}`))
+          newBadges.push(`common-${threshold}`);
       });
-      [5,10,15,20,25].forEach(threshold => {
-        if(uncommonCount >= threshold && !newBadges.includes(`uncommon-${threshold}`)) newBadges.push(`uncommon-${threshold}`);
+      [5, 10, 15, 20, 25].forEach((threshold) => {
+        if (uncommonCount >= threshold && !newBadges.includes(`uncommon-${threshold}`))
+          newBadges.push(`uncommon-${threshold}`);
       });
-  
+
       return { ...prev, pokemon: uniquePokemon, badges: newBadges };
     });
   };
-  
 
   const setCurrentRegion = (region: Region | null) => {
-    setGameState(prev => ({ ...prev, currentRegion: region }));
+    setGameState((prev) => ({ ...prev, currentRegion: region }));
   };
 
   const addBadge = (badge: string) => {
-    setGameState(prev => ({
+    setGameState((prev) => ({
       ...prev,
       badges: prev.badges.includes(badge) ? prev.badges : [...prev.badges, badge],
     }));
@@ -232,18 +247,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const levelThresholds = [
     0, 20, 45, 85, 145, 225, 325, 450, 600, 775, 975, 1225,
-    1525, 1875, 2275, 2725, 3225, 3825, 4525, 5325
+    1525, 1875, 2275, 2725, 3225, 3825, 4525, 5325,
   ];
 
   const addXP = (amount: number) => {
-    setGameState(prev => {
+    setGameState((prev) => {
       const newXP = prev.xp + amount;
       let newLevel = prev.level;
       let newXpToNextLevel = prev.xpToNextLevel;
       for (let i = levelThresholds.length - 1; i >= 0; i--) {
         if (newXP >= levelThresholds[i]) {
           newLevel = i + 1;
-          newXpToNextLevel = i < levelThresholds.length - 1 ? levelThresholds[i + 1] : levelThresholds[i];
+          newXpToNextLevel =
+            i < levelThresholds.length - 1 ? levelThresholds[i + 1] : levelThresholds[i];
           break;
         }
       }
@@ -252,7 +268,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const addCompletedLevel = (regionName: string, subject: string, level: number) => {
-    setGameState(prev => {
+    setGameState((prev) => {
       const regionLevels = prev.completedLevels[regionName] || {};
       const subjectLevels = regionLevels[subject] || [];
       if (!subjectLevels.includes(level)) {
@@ -280,7 +296,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const areAllSubjectLevelsCompleted = (regionName: string) => {
     const regionLevels = gameState.completedLevels[regionName];
     if (!regionLevels) return false;
-    return ['math', 'science', 'coding'].every(subject => {
+    return ["math", "science", "coding"].every((subject) => {
       const levels = regionLevels[subject] || [];
       return levels.length === 10 && levels.every((l, i) => l === i + 1);
     });
