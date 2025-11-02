@@ -1,9 +1,10 @@
 import { PixelButton } from "./PixelButton";
 import { useGame } from "@/contexts/GameContext";
 import { UserPokemonChart } from "./UserPokemonChart";
+import { ShareButtons } from "./ShareButtons";
 
 export function Leaderboard() {
-  const { setCurrentPage } = useGame();
+  const { gameState, setCurrentPage } = useGame();
 
   return (
     <div className="min-h-screen p-4" style={{ backgroundImage: 'url(/Lead.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -19,7 +20,10 @@ export function Leaderboard() {
 
         <UserPokemonChart />
 
-        <div className="text-center mt-8">
+        <div className="text-center mt-8 space-y-4">
+          <ShareButtons
+            message={`I caught ${gameState.pokemon.length} Pokémon! Think you can catch up?`}
+          />
           <PixelButton
             variant="secondary"
             onClick={() => setCurrentPage("regions")}

@@ -29,6 +29,8 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   const [showNextButton, setShowNextButton] = useState(false);
   const [showShareButtons, setShowShareButtons] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
+  const [battleEnded, setBattleEnded] = useState(false);
+  const [buttonText, setButtonText] = useState("Flee Battle");
 
 
 
@@ -127,6 +129,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   }, [currentQuestion, shuffledAnswers.length]);
 
   const handleBattleEnd = () => {
+    setBattleEnded(true);
     if (correctAnswersRef.current >= requiredCorrect) {
       addPokemon(currentOpponent);
       playVictory();
@@ -184,6 +187,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
         });
         setShowShareButtons(true);
         setShareMessage(`I just defeated ${currentOpponent.name} in the ${gameState.currentRegion.name} region! Can you beat me?`);
+        setButtonText("Exit Battle");
       } else if (typeof level === "number" && gameState.currentRegion) {
         // Add completed level
         const subject = gym.includes("Maths") ? "math" : gym.includes("Science") ? "science" : "coding";
@@ -192,11 +196,13 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
           title: `You completed Level ${level} in ${gym}!`,
           description: `You caught ${currentOpponent.name}!`,
         });
+        setButtonText("Exit Battle");
       } else {
         toast({
           title: `You caught ${currentOpponent.name}!`,
           description: currentOpponent.desc,
         });
+        setButtonText("Exit Battle");
       }
 
       // Force immediate save to persist caught Pokemon and badges
@@ -210,8 +216,6 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
         correctAnswersRef.current = 0;
         setSelectedAnswer(null);
         setIsAnswered(false);
-      } else {
-        setTimeout(() => setCurrentPage("gyms"), 2000);
       }
     } else {
       toast({
@@ -335,8 +339,8 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
           </div>
         )}
 
-        <PixelButton onClick={() => setCurrentPage("gyms")}>
-          Flee Battle
+        <PixelButton onClick={() => setCurrentPage("gyms")} disabled={!battleEnded}>
+          {buttonText}
         </PixelButton>
       </div>
     </div>
