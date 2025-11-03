@@ -15,7 +15,7 @@ import { useKonami } from "@/hooks/use-konami";
 import { useToast } from "@/hooks/use-toast";
 
 function GameContent() {
-  const { currentPage, setCurrentPage, addXP, user } = useGame();
+  const { currentPage, setCurrentPage, user } = useGame();
   const { toast } = useToast();
   const [battleConfig, setBattleConfig] = useState<{
     gym: string;
@@ -35,8 +35,7 @@ function GameContent() {
   };
 
   useKonami(() => {
-    addXP(100);
-    toast({ title: "Konami Code!", description: "+100 XP bonus unlocked 🎉" });
+    toast({ title: "Konami Code!", description: "Bonus unlocked 🎉" });
   });
 
   return (

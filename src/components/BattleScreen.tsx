@@ -15,7 +15,7 @@ interface BattleScreenProps {
 }
 
 export function BattleScreen({ gym, level }: BattleScreenProps) {
-  const { gameState, setCurrentPage, addPokemon, addBadge, addXP, addCompletedLevel, saveNow } = useGame();
+  const { gameState, setCurrentPage, addPokemon, addBadge, addCompletedLevel, saveNow } = useGame();
   const { toast } = useToast();
   const { playCorrect, playWrong, playVictory } = useSound();
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -100,8 +100,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
     if (isCorrect) {
       setCorrectAnswers(prev => prev + 1);
       correctAnswersRef.current += 1;
-      addXP(10);
-      toast({ title: "Correct! +10 XP ⚡" });
+      toast({ title: "Correct!" });
       playCorrect();
     } else {
       toast({ title: "Wrong answer!", variant: "destructive" });
@@ -269,7 +268,12 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   const battleGradient = "bg-gradient-to-br from-fighting via-fire to-electric";
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4" style={gameState.currentRegion?.name === "Kanto" ? { backgroundImage: `url(/kanto_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
+    <div className="flex min-h-screen items-center justify-center p-4" style={
+      gameState.currentRegion?.name === "Kanto" ? { backgroundImage: `url(/kanto_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } :
+      gameState.currentRegion?.name === "Johto" ? { backgroundImage: `url(/jhoto_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } :
+      gameState.currentRegion?.name === "Hoenn" ? { backgroundImage: `url(/hoenn_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } :
+      gameState.currentRegion?.name === "Sinnoh" ? { backgroundImage: `url(/sinnoh_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}
+    }>
       <div className="w-full max-w-2xl text-center">
         <h2 className="text-lg sm:text-xl md:text-2xl mb-2 text-primary text-shadow-pixel">
           {gym} Battle vs <span style={{ color: currentOpponent.color }}>{currentOpponent.name}</span>

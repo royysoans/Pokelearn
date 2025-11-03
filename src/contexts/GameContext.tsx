@@ -14,7 +14,6 @@ interface GameContextType {
   setCurrentRegion: (region: Region | null) => void;
   addBadge: (badge: string) => void;
   hasDefeatedGymLeader: (regionName: string) => boolean;
-  addXP: (amount: number) => void;
   addCompletedLevel: (regionName: string, subject: string, level: number) => void;
   isLevelCompleted: (regionName: string, subject: string, level: number) => boolean;
   areAllSubjectLevelsCompleted: (regionName: string) => boolean;
@@ -35,9 +34,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     pokemon: [],
     badges: [],
     currentRegion: null,
-    level: 1,
-    xp: 0,
-    xpToNextLevel: 100,
     completedLevels: {},
     currentPage: "home",
   });
@@ -62,9 +58,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
         pokemon: [],
         badges: [],
         currentRegion: null,
-        level: 1,
-        xp: 0,
-        xpToNextLevel: 100,
         completedLevels: {},
         currentPage: "home",
       });
@@ -127,9 +120,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
         currentRegion: progress?.current_region
           ? regions.find((r) => r.name === progress.current_region) || null
           : null,
-        level: progress?.level || 1,
-        xp: progress?.xp || 0,
-        xpToNextLevel: progress?.xp_to_next_level || 100,
         completedLevels: (progress?.completed_levels as Record<
           string,
           Record<string, number[]>
@@ -163,9 +153,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
           {
             user_id: userToUse.id,
             current_region: gameState.currentRegion?.name || null,
-            level: gameState.level,
-            xp: gameState.xp,
-            xp_to_next_level: gameState.xpToNextLevel,
             completed_levels: gameState.completedLevels,
             coins: gameState.coins,
             current_page: currentPage,
@@ -245,27 +232,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const hasDefeatedGymLeader = (regionName: string) =>
     gameState.badges.includes(`${regionName}-Leader`) || gameState.badges.includes(`${regionName.toLowerCase()}-leader`);
 
-  const levelThresholds = [
-    0, 20, 45, 85, 145, 225, 325, 450, 600, 775, 975, 1225,
-    1525, 1875, 2275, 2725, 3225, 3825, 4525, 5325,
-  ];
 
-  const addXP = (amount: number) => {
-    setGameState((prev) => {
-      const newXP = prev.xp + amount;
-      let newLevel = prev.level;
-      let newXpToNextLevel = prev.xpToNextLevel;
-      for (let i = levelThresholds.length - 1; i >= 0; i--) {
-        if (newXP >= levelThresholds[i]) {
-          newLevel = i + 1;
-          newXpToNextLevel =
-            i < levelThresholds.length - 1 ? levelThresholds[i + 1] : levelThresholds[i];
-          break;
-        }
-      }
-      return { ...prev, xp: newXP, level: newLevel, xpToNextLevel: newXpToNextLevel };
-    });
-  };
 
   const addCompletedLevel = (regionName: string, subject: string, level: number) => {
     setGameState((prev) => {
@@ -316,7 +283,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setCurrentRegion,
         addBadge,
         hasDefeatedGymLeader,
-        addXP,
         addCompletedLevel,
         isLevelCompleted,
         areAllSubjectLevelsCompleted,

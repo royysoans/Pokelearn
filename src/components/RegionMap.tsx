@@ -1,7 +1,6 @@
 import { useGame } from "@/contexts/GameContext";
 import { regions } from "@/data/regions";
 import { PixelButton } from "./PixelButton";
-import { LevelBar } from "./LevelBar";
 
 export function RegionMap() {
   const { setCurrentPage, setCurrentRegion, hasDefeatedGymLeader } = useGame();
@@ -31,8 +30,6 @@ export function RegionMap() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4" style={{ backgroundImage: `url(/bg.png)`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <div className="w-full max-w-6xl">
-        <LevelBar />
-
         <h2 className="text-xl sm:text-2xl md:text-4xl mb-8 text-center text-primary text-shadow-pixel">
           🗺️ Journey Through the Regions
         </h2>

@@ -29,9 +29,6 @@ export interface GameState {
   pokemon: Pokemon[];
   badges: string[];
   currentRegion: Region | null;
-  level: number;
-  xp: number;
-  xpToNextLevel: number;
   completedLevels: Record<string, Record<string, number[]>>; // regionName -> subject -> completed levels [1-10]
   currentPage: GamePage;
 }
