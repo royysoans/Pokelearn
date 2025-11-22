@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { GameState, GamePage, Pokemon, Region } from "@/types/game";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { pokemonDB } from "@/data/pokemon";
 import { regions } from "@/data/regions";
+import { useToast } from "@/hooks/use-toast";
 
 interface GameContextType {
   gameState: GameState;
@@ -38,7 +40,29 @@ export function GameProvider({ children }: { children: ReactNode }) {
     currentPage: "home",
   });
 
-  const [currentPage, setCurrentPage] = useState<GamePage>("home");
+  const [currentPage, setCurrentPageState] = useState<GamePage>("home");
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Sync URL to state
+  useEffect(() => {
+    const path = location.pathname.substring(1) || "home";
+    // Map path to GamePage if needed, or just cast if paths match GamePage values
+    // Our paths: /, /login, /signup, /starter, /regions, /gyms, /battle, /pokedex, /badges, /leaderboard
+    // GamePage: "home" | "login" | "signup" | "starter" | "regions" | "gyms" | "battle" | "pokedex" | "badges" | "leaderboard"
+
+    if (path === "home" || path === "") {
+      setCurrentPageState("home");
+    } else if (["login", "signup", "starter", "regions", "gyms", "battle", "pokedex", "badges", "leaderboard"].includes(path)) {
+      setCurrentPageState(path as GamePage);
+    }
+  }, [location]);
+
+  const setCurrentPage = (page: GamePage) => {
+    setCurrentPageState(page);
+    if (page === "home") navigate("/");
+    else navigate(`/${page}`);
+  };
 
   // ---------------- LOAD GAME ----------------
   useEffect(() => {
@@ -124,18 +148,27 @@ export function GameProvider({ children }: { children: ReactNode }) {
           string,
           Record<string, number[]>
         >) || {},
-        currentPage: "home",
+        currentPage: (progress?.current_page as GamePage) || "home",
       };
 
       setGameState(loadedState);
-      setCurrentPage("home");
+      // setCurrentPage("home"); // REMOVED: This was causing the app to reset to home on tab switch
       console.log("✅ Game state loaded successfully");
     } catch (error: any) {
       console.error("❌ Error loading game state:", error.message || error);
+      toast({
+        title: "Load Failed",
+        description: "Could not load your game data. Please refresh to try again.",
+        variant: "destructive",
+      });
     }
   };
 
   // ---------------- SAVE STATE ----------------
+  // ---------------- SAVE STATE ----------------
+  const isSavingRef = useRef(false);
+  const { toast } = useToast(); // Need to import useToast if not available, but it's likely available in context or hook
+
   const saveGameState = async (overrideUser?: User | null) => {
     const userToUse = overrideUser || user;
     if (!userToUse) {
@@ -143,10 +176,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    if (isSavingRef.current) {
+      console.log("⏳ Save already in progress, skipping...");
+      return;
+    }
+
+    isSavingRef.current = true;
     console.log("💾 Saving game state for user:", userToUse.id);
     console.log("📦 Pokémon count:", gameState.pokemon.length, "Badges:", gameState.badges.length);
 
     try {
+      // 1. Save Progress (Upsert is safe here as it's 1:1)
       const { error: progressError } = await supabase
         .from("user_progress")
         .upsert(
@@ -156,40 +196,75 @@ export function GameProvider({ children }: { children: ReactNode }) {
             completed_levels: gameState.completedLevels,
             coins: gameState.coins,
             current_page: currentPage,
+            updated_at: new Date().toISOString(),
           },
           { onConflict: "user_id" }
         );
       if (progressError) throw progressError;
       console.log("✅ Progress saved");
 
-      const { error: delPokeErr } = await supabase.from("user_pokemons").delete().eq("user_id", userToUse.id);
-      if (delPokeErr) throw delPokeErr;
-
+      // 2. Save Pokemon (Additive only - NO DELETE)
       if (gameState.pokemon.length > 0) {
-        const pokemonInserts = gameState.pokemon.map((p) => ({
-          user_id: userToUse.id,
-          pokemon_id: p.id,
-        }));
-        const { error: pokemonError } = await supabase.from("user_pokemons").insert(pokemonInserts);
-        if (pokemonError) throw pokemonError;
-        console.log("✅ Pokémon saved:", pokemonInserts);
+        // Fetch existing pokemon IDs for this user to avoid duplicates
+        const { data: existingPokemon, error: fetchError } = await supabase
+          .from("user_pokemons")
+          .select("pokemon_id")
+          .eq("user_id", userToUse.id);
+
+        if (fetchError) throw fetchError;
+
+        const existingIds = new Set(existingPokemon?.map(p => p.pokemon_id) || []);
+        const newPokemon = gameState.pokemon.filter(p => !existingIds.has(p.id));
+
+        if (newPokemon.length > 0) {
+          const pokemonInserts = newPokemon.map((p) => ({
+            user_id: userToUse.id,
+            pokemon_id: p.id,
+          }));
+
+          const { error: pokemonError } = await supabase.from("user_pokemons").insert(pokemonInserts);
+          if (pokemonError) throw pokemonError;
+          console.log("✅ New Pokémon saved:", pokemonInserts.length);
+        } else {
+          console.log("✅ No new Pokémon to save");
+        }
       }
 
-      const { error: delBadgeErr } = await supabase.from("user_badges").delete().eq("user_id", userToUse.id);
-      if (delBadgeErr) throw delBadgeErr;
-
+      // 3. Save Badges (Additive only - NO DELETE)
       if (gameState.badges.length > 0) {
-        const badgeInserts = gameState.badges.map((b) => ({
-          user_id: userToUse.id,
-          badge: b,
-        }));
-        const { error: badgeErr } = await supabase.from("user_badges").insert(badgeInserts);
-        if (badgeErr) throw badgeErr;
-        console.log("✅ Badges saved:", badgeInserts);
+        // Fetch existing badges
+        const { data: existingBadges, error: fetchBadgeError } = await supabase
+          .from("user_badges")
+          .select("badge")
+          .eq("user_id", userToUse.id);
+
+        if (fetchBadgeError) throw fetchBadgeError;
+
+        const existingBadgeSet = new Set(existingBadges?.map(b => b.badge) || []);
+        const newBadges = gameState.badges.filter(b => !existingBadgeSet.has(b));
+
+        if (newBadges.length > 0) {
+          const badgeInserts = newBadges.map((b) => ({
+            user_id: userToUse.id,
+            badge: b,
+          }));
+          const { error: badgeErr } = await supabase.from("user_badges").insert(badgeInserts);
+          if (badgeErr) throw badgeErr;
+          console.log("✅ New Badges saved:", newBadges.length);
+        } else {
+          console.log("✅ No new Badges to save");
+        }
       }
 
     } catch (error: any) {
       console.error("❌ Error saving game state:", error.message || error);
+      toast({
+        title: "Save Failed",
+        description: "Could not save your progress. Please check your connection.",
+        variant: "destructive",
+      });
+    } finally {
+      isSavingRef.current = false;
     }
   };
 

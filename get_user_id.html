@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get User ID - Pokelearn</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            background: #f7f9fc;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin: 20px 0;
+        }
+        .user-id {
+            font-family: 'Courier New', monospace;
+            background: #2d3748;
+            color: #48bb78;
+            padding: 15px;
+            border-radius: 6px;
+            word-break: break-all;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 10px 0;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+        .success {
+            color: #48bb78;
+            font-weight: bold;
+        }
+        .error {
+            color: #f56565;
+            font-weight: bold;
+        }
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Get Your User ID</h1>
+        
+        <div class="info-box">
+            <p><strong>Note:</strong> This tool helps you retrieve your user ID from localStorage. Make sure you're logged into Pokelearn before using this.</p>
+        </div>
+
+        <button onclick="getUserId()">Get My User ID</button>
+        <button onclick="copyToClipboard()">Copy User ID</button>
+        <button onclick="generateSQL()">Generate Recovery SQL</button>
+
+        <div id="result"></div>
+        <div id="sqlOutput"></div>
+    </div>
+
+    <script>
+        let userId = null;
+
+        function getUserId() {
+            const result = document.getElementById('result');
+            
+            try {
+                // Check for Supabase session in localStorage
+                const keys = Object.keys(localStorage);
+                const supabaseKey = keys.find(key => key.includes('supabase.auth.token'));
+                
+                if (supabaseKey) {
+                    const authData = JSON.parse(localStorage.getItem(supabaseKey));
+                    userId = authData?.user?.id || authData?.currentSession?.user?.id;
+                    
+                    if (userId) {
+                        result.innerHTML = `
+                            <div class="info-box">
+                                <p class="success">✅ User ID Found!</p>
+                                <div class="user-id">${userId}</div>
+                                <p><strong>Email:</strong> ${authData?.user?.email || authData?.currentSession?.user?.email || 'N/A'}</p>
+                            </div>
+                        `;
+                    } else {
+                        result.innerHTML = `
+                            <div class="info-box">
+                                <p class="error">❌ User ID not found in session data</p>
+                                <p>Make sure you're logged into Pokelearn first.</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    result.innerHTML = `
+                        <div class="info-box">
+                            <p class="error">❌ No Supabase session found</p>
+                            <p>Please log into Pokelearn first, then refresh this page.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="info-box">
+                        <p class="error">❌ Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function copyToClipboard() {
+            if (!userId) {
+                alert('Please get your User ID first!');
+                return;
+            }
+            
+            navigator.clipboard.writeText(userId).then(() => {
+                alert('✅ User ID copied to clipboard!');
+            }).catch(err => {
+                alert('❌ Failed to copy: ' + err.message);
+            });
+        }
+
+        function generateSQL() {
+            if (!userId) {
+                alert('Please get your User ID first!');
+                return;
+            }
+
+            const sql = `-- Check your current Pokemon
+SELECT * FROM user_pokemons 
+WHERE user_id = '${userId}'
+ORDER BY created_at DESC;
+
+-- Count distinct Pokemon
+SELECT COUNT(DISTINCT pokemon_id) as pokemon_count
+FROM user_pokemons 
+WHERE user_id = '${userId}';
+
+-- Check your progress
+SELECT * FROM user_progress 
+WHERE user_id = '${userId}';
+
+-- Check your badges
+SELECT * FROM user_badges 
+WHERE user_id = '${userId}';
+
+-- ⚠️ RECOVERY: If you need to restore 93 Pokemon (IDs 10-102)
+-- ONLY RUN THIS IF YOU WANT TO RESTORE YOUR POKEMON!
+-- This assumes you had Pokemon with IDs from 10 to 102
+
+/*
+DELETE FROM user_pokemons WHERE user_id = '${userId}';
+
+INSERT INTO user_pokemons (user_id, pokemon_id)
+SELECT '${userId}', generate_series(10, 102);
+*/`;
+
+            const sqlOutput = document.getElementById('sqlOutput');
+            sqlOutput.innerHTML = `
+                <div class="info-box">
+                    <h3>📝 Recovery SQL Queries</h3>
+                    <p>Copy and paste these queries into your Supabase SQL Editor:</p>
+                    <button onclick="copySQLToClipboard()">Copy SQL</button>
+                    <pre id="sqlCode">${sql}</pre>
+                </div>
+            `;
+        }
+
+        function copySQLToClipboard() {
+            const sqlCode = document.getElementById('sqlCode').textContent;
+            navigator.clipboard.writeText(sqlCode).then(() => {
+                alert('✅ SQL copied to clipboard!');
+            }).catch(err => {
+                alert('❌ Failed to copy: ' + err.message);
+            });
+        }
+
+        // Auto-run on page load
+        window.onload = getUserId;
+    </script>
+</body>
+</html>

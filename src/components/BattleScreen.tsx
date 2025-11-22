@@ -73,7 +73,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
       // Determine subject from gym name
       const subject = gym.includes("Maths") ? "math"
         : gym.includes("Science") ? "science"
-        : "coding";
+          : "coding";
 
       const qs = await generateQuestions(subject, questionCount, regionName, gym, level);
       setQuestions(qs);
@@ -174,7 +174,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
           if (frame < 240) requestAnimationFrame(loop); else canvas.remove();
         };
         requestAnimationFrame(loop);
-      } catch {}
+      } catch { }
 
       // Award badge if Gym Leader was defeated
       if (level === "leader" && gameState.currentRegion) {
@@ -270,9 +270,9 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   return (
     <div className="flex min-h-screen items-center justify-center p-4" style={
       gameState.currentRegion?.name === "Kanto" ? { backgroundImage: `url(/kanto_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } :
-      gameState.currentRegion?.name === "Johto" ? { backgroundImage: `url(/jhoto_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } :
-      gameState.currentRegion?.name === "Hoenn" ? { backgroundImage: `url(/hoenn_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } :
-      gameState.currentRegion?.name === "Sinnoh" ? { backgroundImage: `url(/sinnoh_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}
+        gameState.currentRegion?.name === "Johto" ? { backgroundImage: `url(/jhoto_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } :
+          gameState.currentRegion?.name === "Hoenn" ? { backgroundImage: `url(/hoenn_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } :
+            gameState.currentRegion?.name === "Sinnoh" ? { backgroundImage: `url(/sinnoh_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}
     }>
       <div className="w-full max-w-2xl text-center">
         <h2 className="text-lg sm:text-xl md:text-2xl mb-2 text-primary text-shadow-pixel">

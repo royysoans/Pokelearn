@@ -135,9 +135,8 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
               return (
                 <div
                   key={level}
-                  className={`bg-card border-4 border-border rounded-lg p-4 ${
-                    isCompleted ? "bg-green-100 border-green-500" : ""
-                  } ${!isUnlocked ? "opacity-50" : ""}`}
+                  className={`bg-card border-4 border-border rounded-lg p-4 ${isCompleted ? "bg-green-100 border-green-500" : ""
+                    } ${!isUnlocked ? "opacity-50" : ""}`}
                 >
                   <h3 className="text-base sm:text-lg md:text-xl mb-2 text-primary">Level {level}</h3>
                   <p className="text-xs text-muted-foreground mb-2">{pokemonRarity} Pokémon</p>
@@ -204,11 +203,10 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
 
           <div
             onClick={handleLeaderChallenge}
-            className={`border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform ${
-              region && areAllSubjectLevelsCompleted(region.name)
+            className={`border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform ${region && areAllSubjectLevelsCompleted(region.name)
                 ? "bg-secondary/90 border-dragon"
                 : "bg-gray-500/50 opacity-50 cursor-not-allowed border-border"
-            }`}
+              }`}
           >
             <h3 className="text-xl sm:text-2xl md:text-3xl mb-2 text-secondary-foreground text-center">👑</h3>
             <h3 className="text-lg sm:text-xl md:text-2xl text-center text-secondary-foreground">Gym Leader</h3>

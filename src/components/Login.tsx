@@ -7,9 +7,10 @@ import { Label } from "@/components/ui/label";
 
 interface LoginProps {
   onSwitchToSignup: () => void;
+  onLoginSuccess?: () => void;
 }
 
-export function Login({ onSwitchToSignup }: LoginProps) {
+export function Login({ onSwitchToSignup, onLoginSuccess }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,6 +34,9 @@ export function Login({ onSwitchToSignup }: LoginProps) {
         title: "Welcome back!",
         description: "Successfully logged in.",
       });
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
     }
 
     setLoading(false);

@@ -1,4 +1,0 @@
-- [x] Edit src/index.css to hide default cursor
-- [x] Create src/components/Cursor.tsx component
-- [x] Edit src/App.tsx to render Cursor component
-- [x] Run dev server to test

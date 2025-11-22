@@ -7,9 +7,10 @@ import { Label } from "@/components/ui/label";
 
 interface SignupProps {
   onSwitchToLogin: () => void;
+  onSignupSuccess?: () => void;
 }
 
-export function Signup({ onSwitchToLogin }: SignupProps) {
+export function Signup({ onSwitchToLogin, onSignupSuccess }: SignupProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -34,6 +35,9 @@ export function Signup({ onSwitchToLogin }: SignupProps) {
         title: "Account Created!",
         description: "Please check your email to confirm your account.",
       });
+      if (onSignupSuccess) {
+        onSignupSuccess();
+      }
     }
 
     setLoading(false);

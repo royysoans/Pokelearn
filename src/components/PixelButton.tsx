@@ -7,7 +7,7 @@ interface PixelButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export function PixelButton({ variant = "primary", className, children, ...props }: PixelButtonProps) {
   const baseClasses = "btn-pixel px-6 py-3 text-sm uppercase font-bold border-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed";
-  
+
   const variantClasses = {
     primary: "bg-primary text-primary-foreground border-yellow-600 hover:bg-primary/90",
     secondary: "bg-secondary text-secondary-foreground border-red-700 hover:bg-secondary/90",
