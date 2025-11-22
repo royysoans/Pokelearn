@@ -20,6 +20,7 @@ interface GameContextType {
   isLevelCompleted: (regionName: string, subject: string, level: number) => boolean;
   areAllSubjectLevelsCompleted: (regionName: string) => boolean;
   saveNow: () => void;
+  evolvePokemon: (pokemonId: number) => Promise<Pokemon | null>;
   user: User | null;
 }
 
@@ -348,6 +349,69 @@ export function GameProvider({ children }: { children: ReactNode }) {
     saveGameState();
   };
 
+  const evolvePokemon = async (pokemonId: number): Promise<Pokemon | null> => {
+    console.log("🧬 Attempting to evolve Pokemon ID:", pokemonId);
+    const pokemon = gameState.pokemon.find(p => p.id === pokemonId);
+    if (!pokemon) {
+      console.error("❌ Pokemon not found in user inventory");
+      return null;
+    }
+    console.log("Found Pokemon:", pokemon.name, "Evolution ID:", pokemon.evolutionId);
+
+    if (!pokemon.evolutionId) {
+      console.error("❌ Pokemon has no evolution ID");
+      return null;
+    }
+
+    const evolvedForm = pokemonDB[pokemon.evolutionId];
+    if (!evolvedForm) {
+      console.error("❌ Evolved form not found in DB for ID:", pokemon.evolutionId);
+      return null;
+    }
+    console.log("✨ Evolving into:", evolvedForm.name);
+
+    // Optimistic update
+    setGameState(prev => ({
+      ...prev,
+      pokemon: [...prev.pokemon.filter(p => p.id !== pokemonId), evolvedForm]
+    }));
+
+    toast({
+      title: "Evolution Successful!",
+      description: `Your ${pokemon.name} evolved into ${evolvedForm.name}!`,
+    });
+
+    if (user) {
+      try {
+        // Delete old pokemon
+        const { error: deleteError } = await supabase
+          .from("user_pokemons")
+          .delete()
+          .match({ user_id: user.id, pokemon_id: pokemonId });
+
+        if (deleteError) throw deleteError;
+
+        // Insert new pokemon
+        const { error: insertError } = await supabase
+          .from("user_pokemons")
+          .insert({ user_id: user.id, pokemon_id: evolvedForm.id });
+
+        if (insertError) throw insertError;
+
+      } catch (error) {
+        console.error("Error saving evolution:", error);
+        // Revert state on error (optional, but good practice)
+        // For now, we'll just show an error toast as the local state is already updated
+        toast({
+          title: "Save Error",
+          description: "Evolution happened locally but failed to save.",
+          variant: "destructive"
+        });
+      }
+    }
+    return evolvedForm;
+  };
+
   return (
     <GameContext.Provider
       value={{
@@ -362,6 +426,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         isLevelCompleted,
         areAllSubjectLevelsCompleted,
         saveNow,
+        evolvePokemon,
         user,
       }}
     >

@@ -6,6 +6,7 @@ export interface Pokemon {
   image: string;
   desc: string;
   color: string;
+  evolutionId?: number;
 }
 
 export interface Region {

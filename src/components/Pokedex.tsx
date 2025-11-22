@@ -35,9 +35,15 @@ const getRarityColor = (rarity: string) => {
   }
 };
 
+import { useSound } from "@/hooks/use-sound";
+
 export function Pokedex() {
-  const { gameState, setCurrentPage } = useGame();
+  const { gameState, setCurrentPage, evolvePokemon } = useGame();
+  const { playEvolutionStart, playEvolutionSuccess } = useSound();
   const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
+  const [isEvolving, setIsEvolving] = useState(false);
+  const [showEvolutionAnimation, setShowEvolutionAnimation] = useState(false);
+  const [evolvedPokemon, setEvolvedPokemon] = useState<Pokemon | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedRarity, setSelectedRarity] = useState<string | null>(null);
@@ -278,7 +284,278 @@ export function Pokedex() {
                     </div>
                   </div>
                 </div>
+
+                {selectedPokemon.evolutionId && !isEvolving && !showEvolutionAnimation && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={async () => {
+                      setIsEvolving(true);
+                      playEvolutionStart();
+                      // Wait for animation start
+                      await new Promise(resolve => setTimeout(resolve, 3000));
+
+                      const evolved = await evolvePokemon(selectedPokemon.id);
+
+                      if (evolved) {
+                        setEvolvedPokemon(evolved);
+                        setShowEvolutionAnimation(true);
+                        playEvolutionSuccess();
+                        // Celebration animation duration
+                        await new Promise(resolve => setTimeout(resolve, 4000));
+                        setSelectedPokemon(evolved);
+                        setIsEvolving(false);
+                        setShowEvolutionAnimation(false);
+                        setEvolvedPokemon(null);
+                      } else {
+                        setIsEvolving(false);
+                      }
+                    }}
+                    className="w-full mt-6 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all relative z-10"
+                  >
+                    <Sparkles className="w-5 h-5 animate-pulse" />
+                    Evolve Pokémon
+                  </motion.button>
+                )}
+
+                {isEvolving && !showEvolutionAnimation && (
+                  <div className="mt-6 text-center relative">
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.1, 1],
+                        filter: ["brightness(1)", "brightness(1.5)", "brightness(1)"],
+                      }}
+                      transition={{ duration: 0.5, repeat: Infinity }}
+                      className="text-primary font-bold text-xl"
+                    >
+                      What? {selectedPokemon.name} is evolving!
+                    </motion.div>
+                  </div>
+                )}
+
+                {showEvolutionAnimation && evolvedPokemon && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md rounded-2xl overflow-hidden"
+                  >
+                    {/* Flash Effect */}
+                    <motion.div
+                      initial={{ opacity: 1 }}
+                      animate={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="absolute inset-0 bg-white z-30 pointer-events-none"
+                    />
+
+                    {/* Burst Particles */}
+                    {[...Array(12)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ x: 0, y: 0, scale: 0 }}
+                        animate={{
+                          x: (Math.random() - 0.5) * 400,
+                          y: (Math.random() - 0.5) * 400,
+                          scale: [0, 1, 0],
+                          opacity: [1, 0]
+                        }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="absolute w-2 h-2 bg-yellow-400 rounded-full z-10"
+                      />
+                    ))}
+
+                    <motion.div
+                      initial={{ scale: 0, rotate: 180, filter: "brightness(2)" }}
+                      animate={{ scale: 1, rotate: 0, filter: "brightness(1)" }}
+                      transition={{ type: "spring", damping: 12 }}
+                      className="relative w-48 h-48 mb-4"
+                    >
+                      <div className="absolute inset-0 bg-yellow-500/40 blur-3xl rounded-full animate-pulse" />
+                      <img
+                        src={evolvedPokemon.image}
+                        alt={evolvedPokemon.name}
+                        className="w-full h-full object-contain pixelated relative z-10"
+                      />
+                    </motion.div>
+                    <motion.h3
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.5 }}
+                      className="text-3xl font-bold text-white mb-2 text-shadow-pixel"
+                    >
+                      Congratulations!
+                    </motion.h3>
+                    <motion.p
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.7 }}
+                      className="text-white/80 text-lg"
+                    >
+                      Your Pokémon evolved into <span className="text-yellow-400 font-bold">{evolvedPokemon.name}</span>!
+                    </motion.p>
+                  </motion.div>
+                )}
               </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Full Screen Evolution Overlay */}
+        <AnimatePresence>
+          {(isEvolving || showEvolutionAnimation) && selectedPokemon && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center"
+            >
+              {/* Background Effects */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black" />
+                {[...Array(20)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    animate={{
+                      y: [0, -1000],
+                      opacity: [0, 1, 0],
+                    }}
+                    transition={{
+                      duration: Math.random() * 2 + 1,
+                      repeat: Infinity,
+                      delay: Math.random() * 2,
+                      ease: "linear",
+                    }}
+                    className="absolute w-1 h-1 bg-white rounded-full"
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      top: "100%",
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Evolution Sequence */}
+              <div className="relative z-10 flex flex-col items-center">
+                {!showEvolutionAnimation ? (
+                  <>
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.1, 1],
+                        filter: ["brightness(1)", "brightness(1.5)", "brightness(1)"],
+                      }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="relative w-64 h-64 mb-8"
+                    >
+                      {/* Energy Rings */}
+                      {[...Array(3)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          animate={{
+                            scale: [1, 1.5],
+                            opacity: [0.5, 0],
+                            borderWidth: ["4px", "0px"],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            delay: i * 0.6,
+                            ease: "easeOut",
+                          }}
+                          className="absolute inset-0 rounded-full border-white"
+                        />
+                      ))}
+
+                      <img
+                        src={selectedPokemon.image}
+                        alt={selectedPokemon.name}
+                        className="w-full h-full object-contain pixelated relative z-10"
+                      />
+                    </motion.div>
+                    <motion.h2
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="text-3xl md:text-4xl font-bold text-white text-center mb-4"
+                    >
+                      What? <br />
+                      <span style={{ color: selectedPokemon.color }}>{selectedPokemon.name}</span> is evolving!
+                    </motion.h2>
+                  </>
+                ) : (
+                  evolvedPokemon && (
+                    <>
+                      {/* Flash Effect */}
+                      <motion.div
+                        initial={{ opacity: 1 }}
+                        animate={{ opacity: 0 }}
+                        transition={{ duration: 2.5, ease: "easeOut" }}
+                        className="fixed inset-0 bg-white z-50 pointer-events-none"
+                      />
+
+                      {/* Burst Particles */}
+                      {[...Array(20)].map((_, i) => (
+                        <motion.div
+                          key={`burst-${i}`}
+                          initial={{ x: 0, y: 0, scale: 0 }}
+                          animate={{
+                            x: (Math.random() - 0.5) * 800,
+                            y: (Math.random() - 0.5) * 800,
+                            scale: [0, Math.random() + 0.5, 0],
+                            opacity: [1, 0],
+                            rotate: Math.random() * 360,
+                          }}
+                          transition={{ duration: 2.5, ease: "easeOut" }}
+                          className="absolute w-4 h-4 bg-white rounded-full z-0"
+                          style={{
+                            backgroundColor: [selectedPokemon.color, evolvedPokemon.color, "#fff"][Math.floor(Math.random() * 3)]
+                          }}
+                        />
+                      ))}
+
+                      <motion.div
+                        initial={{ scale: 0, rotate: 180, filter: "brightness(0)" }}
+                        animate={{ scale: 1, rotate: 0, filter: "brightness(1)" }}
+                        transition={{ type: "spring", damping: 12, stiffness: 100, delay: 0.2 }}
+                        className="relative w-80 h-80 mb-8"
+                      >
+                        <div className="absolute inset-0 bg-white/20 blur-[100px] rounded-full animate-pulse" />
+                        <img
+                          src={evolvedPokemon.image}
+                          alt={evolvedPokemon.name}
+                          className="w-full h-full object-contain pixelated relative z-10 drop-shadow-[0_0_50px_rgba(255,255,255,0.5)]"
+                        />
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ y: 50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="text-center"
+                      >
+                        <h2 className="text-4xl md:text-6xl font-bold text-white mb-4 text-shadow-pixel">
+                          Congratulations!
+                        </h2>
+                        <p className="text-xl md:text-2xl text-white/80">
+                          Your Pokémon evolved into <span style={{ color: evolvedPokemon.color }} className="font-bold">{evolvedPokemon.name}</span>!
+                        </p>
+
+                        <motion.button
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 2 }}
+                          onClick={() => {
+                            setSelectedPokemon(evolvedPokemon);
+                            setIsEvolving(false);
+                            setShowEvolutionAnimation(false);
+                            setEvolvedPokemon(null);
+                          }}
+                          className="mt-12 px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform"
+                        >
+                          Continue
+                        </motion.button>
+                      </motion.div>
+                    </>
+                  )
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
