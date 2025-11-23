@@ -1,6 +1,7 @@
 import { useGame } from "@/contexts/GameContext";
 import { PixelButton } from "./PixelButton";
 import { ShareButtons } from "./ShareButtons";
+import { FloatingOrb } from "./FloatingOrb";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, X, Trophy, Sparkles, Zap, Flame, Droplets, Leaf, Bug, Ghost, Skull, Mountain, Star, Heart } from "lucide-react";
@@ -63,8 +64,24 @@ export function Pokedex() {
   }, [gameState.pokemon, searchQuery, selectedType, selectedRarity]);
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-[url('/grid-pattern.png')] bg-fixed">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen p-4 md:p-8 bg-[url('/grid-pattern.png')] bg-fixed relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Floating Gradient Orbs */}
+        {[...Array(8)].map((_, i) => (
+          <FloatingOrb
+            key={`orb-${i}`}
+            index={i}
+            delay={i * 2}
+            duration={20 + Math.random() * 10}
+            size={100 + Math.random() * 150}
+          />
+        ))}
+        {/* Interactive Orb */}
+        <FloatingOrb followPointer size={300} />
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
 
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">

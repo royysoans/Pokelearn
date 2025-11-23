@@ -314,9 +314,9 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
 
         <div className={`bg-card border-4 border-border rounded p-4 sm:p-6 mb-6 ${quizFontFamily === "noto" ? "font-noto" : ""}`}>
           <p className={`mb-6 ${quizFontSize === "sm" ? "text-xs sm:text-sm" :
-              quizFontSize === "base" ? "text-sm sm:text-base md:text-xl" :
-                quizFontSize === "lg" ? "text-base sm:text-lg md:text-2xl" :
-                  "text-lg sm:text-xl md:text-3xl"
+            quizFontSize === "base" ? "text-sm sm:text-base md:text-xl" :
+              quizFontSize === "lg" ? "text-base sm:text-lg md:text-2xl" :
+                "text-lg sm:text-xl md:text-3xl"
             }`}>
             {currentQuestion.q}
           </p>
@@ -343,9 +343,9 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
                     onClick={() => handleAnswer(answer)}
                     disabled={isAnswered}
                     className={`py-3 px-2 w-full text-center leading-tight break-words whitespace-normal min-h-[60px] justify-center ${quizFontSize === "sm" ? "text-xs" :
-                        quizFontSize === "base" ? "text-sm" :
-                          quizFontSize === "lg" ? "text-base" :
-                            "text-lg"
+                      quizFontSize === "base" ? "text-sm" :
+                        quizFontSize === "lg" ? "text-base" :
+                          "text-lg"
                       }`}
                   >
                     {answer}

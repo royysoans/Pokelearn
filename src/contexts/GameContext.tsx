@@ -25,6 +25,7 @@ interface GameContextType {
   user: User | null;
   currentPokemon: Pokemon | null;
   buddyPokemon: Pokemon | null;
+  isGameLoaded: boolean;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -34,10 +35,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const prevUserRef = useRef<User | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isGameLoadedRef = useRef(false); // CRITICAL: Track if state is valid from DB
+  const [isGameLoaded, setIsGameLoaded] = useState(false);
 
   const [gameState, setGameState] = useState<GameState>({
     name: "Trainer",
-    coins: 50,
     pokemon: [],
     badges: [],
     currentRegion: null,
@@ -78,6 +79,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     // Reset load status on user change
     if (prevUser !== user) {
       isGameLoadedRef.current = false;
+      setIsGameLoaded(false);
     }
 
     if (prevUser && !user) {
@@ -90,7 +92,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
         console.log("🔄 Resetting local state after logout save");
         setGameState({
           name: "Trainer",
-          coins: 50,
           pokemon: [],
           badges: [],
           currentRegion: null,
@@ -105,7 +106,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // Initial render with no user
       setGameState({
         name: "Trainer",
-        coins: 50,
         pokemon: [],
         badges: [],
         currentRegion: null,
@@ -168,7 +168,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       const loadedState: GameState = {
         name: profile?.name || "Trainer",
-        coins: progress?.coins || 50,
         pokemon: Array.from(new Map(rawPokemon.map((p) => [p.id, p])).values()),
         badges: [...new Set(userBadges?.map((b) => b.badge) || [])],
         currentRegion: progress?.current_region
@@ -185,6 +184,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setGameState(loadedState);
       // CRITICAL: Mark as loaded only after successful state set
       isGameLoadedRef.current = true;
+      setIsGameLoaded(true);
     } catch (error: any) {
       console.error("❌ Error loading game state:", error.message || error);
       toast({
@@ -231,7 +231,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
             user_id: userToUse.id,
             current_region: gameState.currentRegion?.name || null,
             completed_levels: gameState.completedLevels,
-            coins: gameState.coins,
             current_page: currentPage,
             buddy_pokemon_id: gameState.buddyPokemonId,
             updated_at: new Date().toISOString(),
@@ -508,6 +507,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         user,
         currentPokemon: gameState.pokemon[0] || null, // Default to first pokemon or null
         buddyPokemon: gameState.buddyPokemonId ? pokemonDB[gameState.buddyPokemonId] : null,
+        isGameLoaded,
       }}
     >
       {children}

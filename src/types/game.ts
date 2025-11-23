@@ -26,7 +26,6 @@ export interface Question {
 
 export interface GameState {
   name: string;
-  coins: number;
   pokemon: Pokemon[];
   badges: string[];
   currentRegion: Region | null;

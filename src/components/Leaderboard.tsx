@@ -6,6 +6,7 @@ import { motion, useAnimation } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Medal, Crown, ArrowLeft, Star, TrendingUp, TrendingDown, Minus, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { FloatingOrb } from "./FloatingOrb";
 
 interface LeaderboardEntry {
   name: string;
@@ -15,73 +16,6 @@ interface LeaderboardEntry {
   rankChange?: number; // positive = moved up, negative = moved down, 0 = no change
 }
 
-// Floating Orb Background Component
-function FloatingOrb({ delay = 0, duration = 20, size = 100, index = 0 }: { delay?: number; duration?: number; size?: number; index?: number }) {
-
-  // Calculate waypoints once and store them - use index for better distribution
-  const waypoints = useMemo(() => {
-    // Distribute orbs in a grid-like pattern to avoid clustering
-    const gridX = (index % 4) * 25 + 10; // 4 columns: 10%, 35%, 60%, 85%
-    const gridY = Math.floor(index / 4) * 40 + 10; // 2 rows: 10%, 50%
-
-    // Add some randomness to the grid positions
-    const startX = gridX + (Math.random() * 10 - 5);
-    const startY = gridY + (Math.random() * 10 - 5);
-
-    return {
-      x: [
-        `${startX}vw`,
-        `${Math.random() * 60 + 20}vw`,
-        `${Math.random() * 60 + 20}vw`,
-        `${Math.random() * 60 + 20}vw`,
-        `${startX}vw`
-      ],
-      y: [
-        `${startY}vh`,
-        `${Math.random() * 60 + 20}vh`,
-        `${Math.random() * 60 + 20}vh`,
-        `${Math.random() * 60 + 20}vh`,
-        `${startY}vh`
-      ],
-      startX,
-      startY
-    };
-  }, []);
-
-  const color = useMemo(() => [
-    'rgba(139, 92, 246, 0.8)',
-    'rgba(59, 130, 246, 0.8)',
-    'rgba(236, 72, 153, 0.8)',
-    'rgba(251, 146, 60, 0.8)'
-  ][Math.floor(Math.random() * 4)], []);
-
-  return (
-    <motion.div
-      initial={{
-        x: waypoints.x[0],
-        y: waypoints.y[0],
-        opacity: 0.9
-      }}
-      animate={{
-        x: waypoints.x,
-        y: waypoints.y,
-        opacity: [0.9, 0.9, 0.9, 0.9, 0.9]
-      }}
-      transition={{
-        duration: duration * 1.5,
-        delay,
-        repeat: Infinity,
-        ease: "linear"
-      }}
-      className="absolute pointer-events-none rounded-full blur-xl"
-      style={{
-        width: size,
-        height: size,
-        background: `radial-gradient(circle, ${color} 0%, transparent 70%)`
-      }}
-    />
-  );
-}
 
 export function Leaderboard() {
   const { gameState, setCurrentPage } = useGame();
@@ -165,7 +99,7 @@ export function Leaderboard() {
   return (
     <div className="min-h-screen p-4 md:p-8 bg-[url('/grid-pattern.png')] bg-fixed relative overflow-hidden">
       {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {/* Floating Gradient Orbs */}
         {[...Array(8)].map((_, i) => (
           <FloatingOrb
@@ -176,6 +110,8 @@ export function Leaderboard() {
             size={100 + Math.random() * 150}
           />
         ))}
+        {/* Interactive Orb */}
+        <FloatingOrb followPointer size={300} />
       </div>
 
       <div className="max-w-4xl mx-auto relative z-10">
