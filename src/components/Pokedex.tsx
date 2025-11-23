@@ -3,7 +3,7 @@ import { PixelButton } from "./PixelButton";
 import { ShareButtons } from "./ShareButtons";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, X, Trophy, Sparkles, Zap, Flame, Droplets, Leaf, Bug, Ghost, Skull, Mountain, Star } from "lucide-react";
+import { Search, Filter, X, Trophy, Sparkles, Zap, Flame, Droplets, Leaf, Bug, Ghost, Skull, Mountain, Star, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -38,7 +38,7 @@ const getRarityColor = (rarity: string) => {
 import { useSound } from "@/hooks/use-sound";
 
 export function Pokedex() {
-  const { gameState, setCurrentPage, evolvePokemon } = useGame();
+  const { gameState, setCurrentPage, evolvePokemon, setBuddy, buddyPokemon } = useGame();
   const { playEvolutionStart, playEvolutionSuccess } = useSound();
   const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
   const [isEvolving, setIsEvolving] = useState(false);
@@ -186,7 +186,10 @@ export function Pokedex() {
                       <Badge variant="outline" className="bg-background/50 text-[10px] uppercase tracking-wider">
                         {pokemon.type}
                       </Badge>
-                      {pokemon.rarity === "legendary" && <Sparkles className="w-4 h-4 text-yellow-400 animate-pulse" />}
+                      <div className="flex gap-1">
+                        {buddyPokemon?.id === pokemon.id && <Heart className="w-4 h-4 text-red-500 fill-red-500 animate-pulse" />}
+                        {pokemon.rarity === "legendary" && <Sparkles className="w-4 h-4 text-yellow-400 animate-pulse" />}
+                      </div>
                     </div>
 
                     <div className="relative h-32 mb-4 group-hover:scale-110 transition-transform duration-300 ease-spring">
@@ -317,6 +320,22 @@ export function Pokedex() {
                     Evolve Pokémon
                   </motion.button>
                 )}
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setBuddy(selectedPokemon.id);
+                    // Optional: Show a toast or feedback
+                  }}
+                  className={`w-full mt-3 font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all relative z-10 ${buddyPokemon?.id === selectedPokemon.id
+                      ? "bg-red-100 text-red-600 border-2 border-red-500"
+                      : "bg-white text-black border-2 border-gray-200 hover:border-red-400 hover:text-red-500"
+                    }`}
+                >
+                  <Heart className={`w-5 h-5 ${buddyPokemon?.id === selectedPokemon.id ? "fill-red-500" : ""}`} />
+                  {buddyPokemon?.id === selectedPokemon.id ? "Your Buddy" : "Set as Buddy"}
+                </motion.button>
 
                 {isEvolving && !showEvolutionAnimation && (
                   <div className="mt-6 text-center relative">

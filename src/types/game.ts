@@ -32,6 +32,7 @@ export interface GameState {
   currentRegion: Region | null;
   completedLevels: Record<string, Record<string, number[]>>; // regionName -> subject -> completed levels [1-10]
   currentPage: GamePage;
+  buddyPokemonId: number | null;
 }
 
 export type GamePage = 'home' | 'login' | 'signup' | 'starter' | 'regions' | 'gyms' | 'battle' | 'pokedex' | 'badges' | 'leaderboard';

@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import { useAudioBgm } from "@/hooks/use-audio-bgm";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
+import { Volume2, VolumeX } from "lucide-react";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { GameProvider, useGame } from "@/contexts/GameContext";
@@ -23,6 +24,8 @@ import { Pokedex } from "@/components/Pokedex";
 import { Badges } from "@/pages/Badges";
 import { Leaderboard } from "@/components/Leaderboard";
 import { MultiplayerGame } from "@/pages/MultiplayerGame";
+import { BuddyDisplay } from "@/components/BuddyDisplay";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -109,19 +112,28 @@ const App = () => {
           <Toaster />
           <Sonner />
 
-          {/* Global mute button */}
-          <button
+          {/* Global mute button - Styled to match theme */}
+          <motion.button
             onClick={toggleMute}
             aria-label={muted ? "Unmute music" : "Mute music"}
-            className="fixed top-3 right-3 z-50 rounded-md border px-3 py-1 text-sm bg-background/70 backdrop-blur hover:bg-background"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="fixed top-4 right-4 z-50 p-3 rounded-xl bg-card/80 backdrop-blur-md border-2 border-primary/30 hover:border-primary shadow-lg hover:shadow-primary/20 transition-all duration-300 group"
           >
-            {muted ? "🔇" : "🔊"}
-          </button>
+            {muted ? (
+              <VolumeX className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            ) : (
+              <Volume2 className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+            )}
+          </motion.button>
 
           <BrowserRouter>
             <AuthProvider>
               <GameProvider>
                 <AnimatedRoutes />
+                <ErrorBoundary>
+                  <BuddyDisplay />
+                </ErrorBoundary>
               </GameProvider>
             </AuthProvider>
           </BrowserRouter>

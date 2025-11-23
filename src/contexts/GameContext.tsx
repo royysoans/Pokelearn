@@ -12,7 +12,7 @@ interface GameContextType {
   gameState: GameState;
   currentPage: GamePage;
   setCurrentPage: (page: GamePage) => void;
-  addPokemon: (pokemon: Pokemon) => void;
+  addPokemon: (pokemon: Pokemon, immediate?: boolean) => Promise<void>;
   setCurrentRegion: (region: Region | null) => void;
   addBadge: (badge: string) => void;
   hasDefeatedGymLeader: (regionName: string) => boolean;
@@ -21,8 +21,10 @@ interface GameContextType {
   areAllSubjectLevelsCompleted: (regionName: string) => boolean;
   saveNow: () => void;
   evolvePokemon: (pokemonId: number) => Promise<Pokemon | null>;
+  setBuddy: (pokemonId: number | null) => void;
   user: User | null;
   currentPokemon: Pokemon | null;
+  buddyPokemon: Pokemon | null;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -31,6 +33,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const prevUserRef = useRef<User | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isGameLoadedRef = useRef(false); // CRITICAL: Track if state is valid from DB
 
   const [gameState, setGameState] = useState<GameState>({
     name: "Trainer",
@@ -40,6 +43,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     currentRegion: null,
     completedLevels: {},
     currentPage: "home",
+    buddyPokemonId: null,
   });
 
   const [currentPage, setCurrentPageState] = useState<GamePage>("home");
@@ -71,13 +75,34 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const prevUser = prevUserRef.current;
     prevUserRef.current = user;
 
-    if (prevUser && !user) {
-      saveGameState(prevUser);
+    // Reset load status on user change
+    if (prevUser !== user) {
+      isGameLoadedRef.current = false;
     }
 
-    if (user) {
+    if (prevUser && !user) {
+      // User is logging out - save their data first
+      console.log("🚨 User logging out, saving data before reset");
+      saveGameState(prevUser);
+
+      // CRITICAL: Wait a bit before resetting state to ensure save completes
+      setTimeout(() => {
+        console.log("🔄 Resetting local state after logout save");
+        setGameState({
+          name: "Trainer",
+          coins: 50,
+          pokemon: [],
+          badges: [],
+          currentRegion: null,
+          completedLevels: {},
+          currentPage: "home",
+          buddyPokemonId: null,
+        });
+      }, 500); // Give save time to complete
+    } else if (user) {
       loadGameState();
-    } else {
+    } else if (!prevUser && !user) {
+      // Initial render with no user
       setGameState({
         name: "Trainer",
         coins: 50,
@@ -86,6 +111,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         currentRegion: null,
         completedLevels: {},
         currentPage: "home",
+        buddyPokemonId: null,
       });
     }
   }, [user]);
@@ -93,7 +119,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   // ---------------- AUTO SAVE ----------------
   useEffect(() => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    if (user) {
+    // Only auto-save if user is logged in AND has some data
+    // This prevents saving empty state during logout
+    if (user && (gameState.pokemon.length > 0 || Object.keys(gameState.completedLevels).length > 0)) {
       saveTimeoutRef.current = setTimeout(() => saveGameState(), 2000);
     }
     return () => {
@@ -151,10 +179,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
           Record<string, number[]>
         >) || {},
         currentPage: (progress?.current_page as GamePage) || "home",
+        buddyPokemonId: progress?.buddy_pokemon_id || null,
       };
 
       setGameState(loadedState);
-      // setCurrentPage("home"); // REMOVED: This was causing the app to reset to home on tab switch
+      console.log("📊 Loaded completed levels from DB:", JSON.stringify(progress?.completed_levels, null, 2));
+      console.log("📊 Parsed completed levels:", JSON.stringify(loadedState.completedLevels, null, 2));
+
+      // CRITICAL: Mark as loaded only after successful state set
+      isGameLoadedRef.current = true;
       console.log("✅ Game state loaded successfully");
     } catch (error: any) {
       console.error("❌ Error loading game state:", error.message || error);
@@ -183,6 +216,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // CRITICAL SAFEGUARD: Do not save if we haven't successfully loaded yet
+    // This prevents overwriting DB with empty state if load failed
+    if (!isGameLoadedRef.current && userToUse) {
+      console.error("🛑 BLOCKED SAVE: Game state has not been loaded successfully yet.");
+      console.warn("This prevents overwriting your data with empty state.");
+      return;
+    }
+
     isSavingRef.current = true;
     console.log("💾 Saving game state for user:", userToUse.id);
     console.log("📦 Pokémon count:", gameState.pokemon.length, "Badges:", gameState.badges.length);
@@ -198,6 +239,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
             completed_levels: gameState.completedLevels,
             coins: gameState.coins,
             current_page: currentPage,
+            buddy_pokemon_id: gameState.buddyPokemonId,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "user_id" }
@@ -271,7 +313,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   // ---------------- GAME ACTIONS ----------------
-  const addPokemon = (pokemon: Pokemon) => {
+  const addPokemon = async (pokemon: Pokemon, immediate: boolean = false) => {
     setGameState((prev) => {
       const newPokemon = prev.pokemon.some((p) => p.id === pokemon.id)
         ? prev.pokemon
@@ -293,6 +335,49 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       return { ...prev, pokemon: uniquePokemon, badges: newBadges };
     });
+
+    // If immediate save is requested and user exists, save to database right away
+    if (immediate && user) {
+      try {
+        console.log("💾 Immediately saving Pokémon:", pokemon.name);
+
+        // Check if pokemon already exists
+        const { data: existingPokemon, error: fetchError } = await supabase
+          .from("user_pokemons")
+          .select("pokemon_id")
+          .eq("user_id", user.id)
+          .eq("pokemon_id", pokemon.id)
+          .single();
+
+        if (fetchError && fetchError.code !== "PGRST116") {
+          throw fetchError;
+        }
+
+        // Only insert if it doesn't exist
+        if (!existingPokemon) {
+          const { error: insertError } = await supabase
+            .from("user_pokemons")
+            .insert({ user_id: user.id, pokemon_id: pokemon.id });
+
+          if (insertError) throw insertError;
+          console.log("✅ Pokémon saved immediately:", pokemon.name);
+
+          toast({
+            title: "Pokémon Added!",
+            description: `${pokemon.name} has been added to your team!`,
+          });
+        } else {
+          console.log("ℹ️ Pokémon already exists in database:", pokemon.name);
+        }
+      } catch (error: any) {
+        console.error("❌ Error immediately saving Pokémon:", error.message || error);
+        toast({
+          title: "Save Failed",
+          description: "Could not save your Pokémon. It will be saved automatically soon.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   const setCurrentRegion = (region: Region | null) => {
@@ -413,6 +498,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return evolvedForm;
   };
 
+  const setBuddy = (pokemonId: number | null) => {
+    setGameState(prev => ({ ...prev, buddyPokemonId: pokemonId }));
+  };
+
   return (
     <GameContext.Provider
       value={{
@@ -428,8 +517,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
         areAllSubjectLevelsCompleted,
         saveNow,
         evolvePokemon,
+        setBuddy,
         user,
         currentPokemon: gameState.pokemon[0] || null, // Default to first pokemon or null
+        buddyPokemon: gameState.buddyPokemonId ? pokemonDB[gameState.buddyPokemonId] : null,
       }}
     >
       {children}

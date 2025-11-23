@@ -8,8 +8,8 @@ export function StarterSelection() {
   const { setCurrentPage, addPokemon } = useGame();
   const [showPikachu, setShowPikachu] = useState(false);
 
-  const handleSelectStarter = (starter: typeof starters[0]) => {
-    addPokemon(starter);
+  const handleSelectStarter = async (starter: typeof starters[0]) => {
+    await addPokemon(starter, true); // immediate save for starter pokemon
     setCurrentPage("regions");
   };
 
@@ -83,11 +83,10 @@ export function StarterSelection() {
               />
               <h3 className="text-lg sm:text-xl font-bold mb-2" style={{ color: starter.color }}>{starter.name}</h3>
               <p className="text-sm text-muted-foreground mb-2">{starter.desc}</p>
-              <span className={`inline-block px-3 py-1 text-xs rounded ${
-                starter.type === "Fire" ? "bg-orange-500" :
-                starter.type === "Water" ? "bg-blue-500" :
-                "bg-green-500"
-              } text-white`}>
+              <span className={`inline-block px-3 py-1 text-xs rounded ${starter.type === "Fire" ? "bg-orange-500" :
+                  starter.type === "Water" ? "bg-blue-500" :
+                    "bg-green-500"
+                } text-white`}>
                 {starter.type}
               </span>
             </button>

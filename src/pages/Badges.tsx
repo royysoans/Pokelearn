@@ -24,7 +24,7 @@ const allBadges = [
   // Arena Badges
   ...regions.flatMap(region =>
     arenas.map(arena => ({
-      id: `${region.toLowerCase()}-${arena.toLowerCase()}-arena`,
+      id: `${region.toLowerCase()}-${arena.toLowerCase() === 'maths' ? 'math' : arena.toLowerCase()}-arena`,
       name: `${region} ${arena === 'Maths' ? 'Math Whiz' : arena === 'Science' ? 'Scientist' : 'Coder'}`,
       desc: `Cleared ${arena} Arena of ${region}`,
       type: 'arena',
@@ -68,8 +68,18 @@ export function Badges() {
     }
   };
 
+  const getBadgeColor = (type: string) => {
+    switch (type) {
+      case 'gym': return { border: '#fbbf24', glow: 'rgba(251, 191, 36, 0.4)' };
+      case 'arena': return { border: '#60a5fa', glow: 'rgba(96, 165, 250, 0.4)' };
+      case 'collector': return { border: '#a78bfa', glow: 'rgba(167, 139, 250, 0.4)' };
+      default: return { border: '#9ca3af', glow: 'rgba(156, 163, 175, 0.4)' };
+    }
+  };
+
   const BadgeCard = ({ badge }: { badge: typeof allBadges[0] }) => {
     const earned = gameState.badges.includes(badge.id);
+    const colors = getBadgeColor(badge.type);
 
     return (
       <motion.div
@@ -77,12 +87,28 @@ export function Badges() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         whileHover={{ scale: 1.05, rotateX: 5, rotateY: 5 }}
-        className={`relative group p-4 rounded-xl border-2 transition-all duration-300 ${earned
-            ? "bg-card/60 backdrop-blur-md border-primary/30 hover:border-primary hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]"
-            : "bg-muted/20 border-white/5 grayscale opacity-60"
+        className={`relative group p-4 rounded-xl border-2 transition-all duration-300 overflow-hidden ${earned
+          ? "bg-card/60 backdrop-blur-md"
+          : "bg-muted/20 border-white/5 grayscale opacity-60"
           }`}
+        style={{
+          borderColor: earned ? colors.border : undefined,
+          boxShadow: earned ? `0 0 15px ${colors.glow}` : undefined,
+        }}
       >
-        <div className="flex flex-col items-center text-center gap-3">
+        {/* Subtle shine effect for earned badges */}
+        {earned && (
+          <div
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            style={{
+              background: `linear-gradient(90deg, transparent 0%, ${colors.glow} 50%, transparent 100%)`,
+              animation: 'shine 8s infinite',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+
+        <div className="relative flex flex-col items-center text-center gap-3">
           <div className={`p-4 rounded-full ${earned ? 'bg-primary/10' : 'bg-black/20'} relative`}>
             {getBadgeIcon(badge.type, earned)}
             {earned && (
@@ -206,6 +232,14 @@ export function Badges() {
         </motion.div>
 
       </div>
+
+      {/* CSS for shine animation */}
+      <style>{`
+        @keyframes shine {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
     </div>
   );
 }
