@@ -6,8 +6,16 @@
  All colors MUST be HSL.
  */
 
-html, body, button, a, input, textarea, select, * {
+html,
+body,
+button,
+a,
+input,
+textarea,
+select,
+* {
   cursor: url('/Pokeballll_cursor.png') 48 48, auto !important;
+
 }
 
 @layer base {
@@ -41,7 +49,7 @@ html, body, button, a, input, textarea, select, * {
     --ring: 48 96% 53%;
 
     --radius: 0.25rem;
-    
+
     /* Gaming colors */
     --electric: 48 96% 53%;
     --fire: 14 91% 51%;
@@ -49,11 +57,11 @@ html, body, button, a, input, textarea, select, * {
     --grass: 142 71% 45%;
     --ice: 199 89% 48%;
     --psychic: 271 76% 53%;
-    
+
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(48 96% 53%), hsl(14 91% 51%));
     --gradient-battle: linear-gradient(180deg, hsl(222 47% 11% / 0.95), hsl(217 33% 17% / 0.95));
-    
+
     /* Shadows */
     --shadow-pixel: 4px 4px 0 hsl(0 0% 0% / 0.25);
     --shadow-glow: 0 0 20px hsl(48 96% 53% / 0.5);
@@ -100,8 +108,13 @@ html, body, button, a, input, textarea, select, * {
     @apply bg-background text-foreground;
     font-family: 'Press Start 2P', cursive;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Press Start 2P', cursive;
   }
 }
@@ -112,21 +125,21 @@ html, body, button, a, input, textarea, select, * {
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
   }
-  
+
   .text-shadow-pixel {
     text-shadow: 3px 3px 0 hsl(0 0% 0% / 0.25);
   }
-  
+
   .btn-pixel {
     box-shadow: inset -4px -4px 0 0 rgba(0, 0, 0, 0.2), var(--shadow-pixel);
     transition: transform 0.1s, box-shadow 0.1s;
   }
-  
+
   .btn-pixel:hover {
     transform: translate(2px, 2px);
     box-shadow: inset -4px -4px 0 0 rgba(0, 0, 0, 0.2), 2px 2px 0 hsl(0 0% 0% / 0.25);
   }
-  
+
   .btn-pixel:active {
     transform: translate(4px, 4px);
     box-shadow: inset -4px -4px 0 0 rgba(0, 0, 0, 0.2);
