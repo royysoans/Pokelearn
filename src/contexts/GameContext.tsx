@@ -133,7 +133,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const loadGameState = async () => {
     if (!user) return;
 
-    console.log("🔄 Loading game state for user:", user.id);
+    if (!user) return;
 
     try {
       const { data: profile, error: profileError } = await supabase
@@ -183,12 +183,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       };
 
       setGameState(loadedState);
-      console.log("📊 Loaded completed levels from DB:", JSON.stringify(progress?.completed_levels, null, 2));
-      console.log("📊 Parsed completed levels:", JSON.stringify(loadedState.completedLevels, null, 2));
-
       // CRITICAL: Mark as loaded only after successful state set
       isGameLoadedRef.current = true;
-      console.log("✅ Game state loaded successfully");
     } catch (error: any) {
       console.error("❌ Error loading game state:", error.message || error);
       toast({
@@ -199,7 +195,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // ---------------- SAVE STATE ----------------
   // ---------------- SAVE STATE ----------------
   const isSavingRef = useRef(false);
   const { toast } = useToast(); // Need to import useToast if not available, but it's likely available in context or hook
@@ -225,8 +220,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
 
     isSavingRef.current = true;
-    console.log("💾 Saving game state for user:", userToUse.id);
-    console.log("📦 Pokémon count:", gameState.pokemon.length, "Badges:", gameState.badges.length);
+    isSavingRef.current = true;
 
     try {
       // 1. Save Progress (Upsert is safe here as it's 1:1)
@@ -245,7 +239,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           { onConflict: "user_id" }
         );
       if (progressError) throw progressError;
-      console.log("✅ Progress saved");
+      if (progressError) throw progressError;
 
       // 2. Save Pokemon (Additive only - NO DELETE)
       if (gameState.pokemon.length > 0) {
@@ -268,9 +262,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
           const { error: pokemonError } = await supabase.from("user_pokemons").insert(pokemonInserts);
           if (pokemonError) throw pokemonError;
-          console.log("✅ New Pokémon saved:", pokemonInserts.length);
-        } else {
-          console.log("✅ No new Pokémon to save");
+          if (pokemonError) throw pokemonError;
         }
       }
 
@@ -294,9 +286,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           }));
           const { error: badgeErr } = await supabase.from("user_badges").insert(badgeInserts);
           if (badgeErr) throw badgeErr;
-          console.log("✅ New Badges saved:", newBadges.length);
-        } else {
-          console.log("✅ No new Badges to save");
+          if (badgeErr) throw badgeErr;
         }
       }
 
@@ -436,13 +426,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const evolvePokemon = async (pokemonId: number): Promise<Pokemon | null> => {
-    console.log("🧬 Attempting to evolve Pokemon ID:", pokemonId);
     const pokemon = gameState.pokemon.find(p => p.id === pokemonId);
     if (!pokemon) {
       console.error("❌ Pokemon not found in user inventory");
       return null;
     }
-    console.log("Found Pokemon:", pokemon.name, "Evolution ID:", pokemon.evolutionId);
 
     if (!pokemon.evolutionId) {
       console.error("❌ Pokemon has no evolution ID");
@@ -454,7 +442,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
       console.error("❌ Evolved form not found in DB for ID:", pokemon.evolutionId);
       return null;
     }
-    console.log("✨ Evolving into:", evolvedForm.name);
 
     // Optimistic update
     setGameState(prev => ({

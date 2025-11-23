@@ -37,10 +37,9 @@ export const useMultiplayer = () => {
         winner: null,
     });
 
-    // ... (keep existing code)
+
 
     const enterBattle = (battle: any) => {
-        console.log("Entering battle:", battle);
         setGameState(prev => {
             const myPlayerId = userId;
             const opponentPlayerId = myPlayerId === battle.player_1_id ? battle.player_2_id : battle.player_1_id;
@@ -78,7 +77,6 @@ export const useMultiplayer = () => {
             .on('postgres_changes', { event: '*', schema: 'public', table: 'battles', filter: `id=eq.${battleId}` },
                 (payload) => {
                     const battle = payload.new as any;
-                    console.log("Battle update received:", battle);
                     setGameState(prev => {
                         const myPlayerId = userId;
                         const opponentPlayerId = myPlayerId === battle.player_1_id ? battle.player_2_id : battle.player_1_id;
@@ -261,9 +259,7 @@ export const useMultiplayer = () => {
                         if (currentGameState.isHost) {
                             // Host generates questions and creates battle
                             // Use the existing generateQuestions from data/questions which handles Edge Functions and fallbacks
-                            console.log("Host generating questions for topic:", newLobby.topic);
                             const questions = await generateQuestions(newLobby.topic, 10);
-                            console.log("Generated questions:", questions);
 
                             const { data: battle, error: battleError } = await supabase
                                 .from('battles')
@@ -282,8 +278,6 @@ export const useMultiplayer = () => {
                                 alert(`Error creating battle: ${battleError.message}. Please run the migration SQL.`);
                                 return;
                             }
-
-                            console.log("Battle created:", battle);
 
                             if (battle) enterBattle(battle);
                         } else {
