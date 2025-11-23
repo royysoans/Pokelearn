@@ -143,14 +143,9 @@ export const useMultiplayer = () => {
             if (updates.player_1_hp !== undefined) newPlayer1Hp = updates.player_1_hp;
             if (updates.player_2_hp !== undefined) newPlayer2Hp = updates.player_2_hp;
 
+            // Battle terminates immediately when any player's HP reaches 0
             if (newPlayer1Hp <= 0) updates.winner_id = gameState.opponent.id;
             else if (newPlayer2Hp <= 0) updates.winner_id = userId;
-            else if (updates.current_question_index >= gameState.questions.length) {
-                // End of questions
-                if (newPlayer1Hp > newPlayer2Hp) updates.winner_id = gameState.isHost ? userId : gameState.opponent.id;
-                else if (newPlayer2Hp > newPlayer1Hp) updates.winner_id = gameState.isHost ? gameState.opponent.id : userId;
-                else updates.winner_id = gameState.isHost ? userId : gameState.opponent.id;
-            }
 
             await supabase
                 .from('battles')
@@ -262,7 +257,7 @@ export const useMultiplayer = () => {
                             // Host generates questions and creates battle
                             // Use the existing generateQuestions from data/questions which handles Edge Functions and fallbacks
                             console.log("Host generating questions for topic:", newLobby.topic);
-                            const questions = await generateQuestions(newLobby.topic, 10);
+                            const questions = await generateQuestions(newLobby.topic, 20);
                             console.log("Generated questions:", questions);
 
                             const { data: battle, error: battleError } = await supabase
