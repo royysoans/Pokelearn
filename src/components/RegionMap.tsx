@@ -85,6 +85,9 @@ export function RegionMap() {
                     <PixelButton onClick={() => setCurrentPage("leaderboard")}>
                         Leaderboard
                     </PixelButton>
+                    <PixelButton onClick={() => window.location.href = '/multiplayer'} variant="fire">
+                        Multiplayer Battle
+                    </PixelButton>
                 </div>
             </div>
         </div>

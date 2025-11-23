@@ -22,6 +22,7 @@ interface GameContextType {
   saveNow: () => void;
   evolvePokemon: (pokemonId: number) => Promise<Pokemon | null>;
   user: User | null;
+  currentPokemon: Pokemon | null;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -428,6 +429,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         saveNow,
         evolvePokemon,
         user,
+        currentPokemon: gameState.pokemon[0] || null, // Default to first pokemon or null
       }}
     >
       {children}

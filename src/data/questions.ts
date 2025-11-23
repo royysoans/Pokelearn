@@ -112,6 +112,14 @@ export async function generateQuestions(
     let selected = fresh.slice(0, count);
     if (selected.length < count) selected = [...selected, ...reused.slice(0, count - selected.length)];
 
+    // If still not enough, fill with duplicates from selected (cycling)
+    if (selected.length < count && selected.length > 0) {
+      const missing = count - selected.length;
+      for (let i = 0; i < missing; i++) {
+        selected.push({ ...selected[i % selected.length] });
+      }
+    }
+
     selected.forEach(q => {
       used.add(q.q);
       recent.add(normalizeQuestionText(q.q));

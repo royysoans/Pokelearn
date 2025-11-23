@@ -22,6 +22,7 @@ import { BattleScreen } from "@/components/BattleScreen";
 import { Pokedex } from "@/components/Pokedex";
 import { Badges } from "@/pages/Badges";
 import { Leaderboard } from "@/components/Leaderboard";
+import { MultiplayerGame } from "@/pages/MultiplayerGame";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,8 @@ const AnimatedRoutes = () => {
         <Route path="/pokedex" element={<PageTransition><AuthGuard><Pokedex /></AuthGuard></PageTransition>} />
         <Route path="/badges" element={<PageTransition><AuthGuard><Badges /></AuthGuard></PageTransition>} />
         <Route path="/leaderboard" element={<PageTransition><AuthGuard><Leaderboard /></AuthGuard></PageTransition>} />
+        <Route path="/leaderboard" element={<PageTransition><AuthGuard><Leaderboard /></AuthGuard></PageTransition>} />
+        <Route path="/multiplayer" element={<PageTransition><AuthGuard><MultiplayerGame /></AuthGuard></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
