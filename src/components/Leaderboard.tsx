@@ -24,40 +24,19 @@ export function Leaderboard() {
 
   const fetchData = async () => {
     try {
-      // 1. Get all user pokemons
-      const { data: pokemonData, error: pokemonError } = await supabase
-        .from("user_pokemons")
-        .select("user_id, pokemon_id");
+      // Query the leaderboard_view which does server-side aggregation
+      // This avoids the 1000-row limit issue with user_pokemons
+      const { data: leaderboardData, error: leaderboardError } = await supabase
+        .from("leaderboard_view")
+        .select("user_id, name, pokemon_count");
 
-      if (pokemonError) throw pokemonError;
+      if (leaderboardError) throw leaderboardError;
 
-      // 2. Get all profiles
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("id, name");
-
-      if (profileError) throw profileError;
-
-      // 3. Create a map of user_id to name
-      const userMap: { [key: string]: string } = {};
-      profileData.forEach((profile: any) => {
-        userMap[profile.id] = profile.name;
-      });
-
-      // 4. Count distinct pokemon per user
-      const userPokemonSets: { [key: string]: Set<number> } = {};
-      pokemonData.forEach((item: any) => {
-        if (!userPokemonSets[item.user_id]) {
-          userPokemonSets[item.user_id] = new Set();
-        }
-        userPokemonSets[item.user_id].add(item.pokemon_id);
-      });
-
-      const sortedData = Object.keys(userPokemonSets)
-        .map(userId => ({
-          name: userMap[userId] || "Unknown Trainer",
-          pokemonCount: userPokemonSets[userId].size,
-          userId: userId,
+      const sortedData = (leaderboardData || [])
+        .map((entry: any) => ({
+          name: entry.name || "Unknown Trainer",
+          pokemonCount: entry.pokemon_count || 0,
+          userId: entry.user_id,
           rank: 0,
           rankChange: 0
         }))
@@ -65,9 +44,8 @@ export function Leaderboard() {
         .map((entry, index) => {
           const newRank = index + 1;
           const oldRank = previousRanksRef.current.get(entry.userId);
-          const rankChange = oldRank ? oldRank - newRank : 0; // positive = moved up
+          const rankChange = oldRank ? oldRank - newRank : 0;
 
-          // Update previous ranks
           previousRanksRef.current.set(entry.userId, newRank);
 
           return { ...entry, rank: newRank, rankChange };
