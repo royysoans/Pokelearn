@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import OpenDyslexic font for better readability */
+@import url('https://fonts.cdnfonts.com/css/opendyslexic');
+
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
  All colors MUST be HSL.
  */
@@ -143,5 +147,9 @@ select,
   .btn-pixel:active {
     transform: translate(4px, 4px);
     box-shadow: inset -4px -4px 0 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .font-noto {
+    font-family: 'OpenDyslexic', sans-serif;
   }
 }

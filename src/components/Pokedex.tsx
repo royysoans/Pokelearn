@@ -170,7 +170,6 @@ export function Pokedex() {
               {filteredPokemon.map((pokemon, index) => (
                 <motion.div
                   key={pokemon.id}
-                  layoutId={`pokemon-${pokemon.id}`}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
@@ -224,7 +223,10 @@ export function Pokedex() {
               onClick={() => setSelectedPokemon(null)}
             >
               <motion.div
-                layoutId={`pokemon-${selectedPokemon.id}`}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 className="bg-card border-2 border-primary/50 rounded-2xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -329,8 +331,8 @@ export function Pokedex() {
                     // Optional: Show a toast or feedback
                   }}
                   className={`w-full mt-3 font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all relative z-10 ${buddyPokemon?.id === selectedPokemon.id
-                      ? "bg-red-100 text-red-600 border-2 border-red-500"
-                      : "bg-white text-black border-2 border-gray-200 hover:border-red-400 hover:text-red-500"
+                    ? "bg-red-100 text-red-600 border-2 border-red-500"
+                    : "bg-white text-black border-2 border-gray-200 hover:border-red-400 hover:text-red-500"
                     }`}
                 >
                   <Heart className={`w-5 h-5 ${buddyPokemon?.id === selectedPokemon.id ? "fill-red-500" : ""}`} />

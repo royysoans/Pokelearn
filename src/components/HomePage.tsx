@@ -1,12 +1,29 @@
 import { PixelButton } from "./PixelButton";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
 
 export function HomePage() {
   const { setCurrentPage, gameState } = useGame();
   const { user, signOut } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Wait for initial data load before allowing navigation
+  useEffect(() => {
+    if (user) {
+      // Give time for game state to load from database
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setIsLoading(false);
+    }
+  }, [user]);
 
   const handleStartJourney = () => {
+    if (isLoading) return; // Prevent navigation while loading
+
     if (gameState.pokemon.length > 0) {
       setCurrentPage("regions");
     } else {
@@ -42,8 +59,9 @@ export function HomePage() {
               variant="primary"
               className="text-lg sm:text-xl md:text-2xl animate-pulse-glow"
               onClick={handleStartJourney}
+              disabled={isLoading}
             >
-              Continue Journey
+              {isLoading ? "Loading..." : "Continue Journey"}
             </PixelButton>
             <br />
             <PixelButton

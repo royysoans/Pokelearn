@@ -8,6 +8,7 @@ import { PixelButton } from "./PixelButton";
 import { ShareButtons } from "./ShareButtons";
 import { useToast } from "@/hooks/use-toast";
 import { useSound } from "@/hooks/use-sound";
+import { QuizSettings } from "./QuizSettings";
 
 interface BattleScreenProps {
   gym: string;
@@ -31,6 +32,8 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   const [shareMessage, setShareMessage] = useState("");
   const [battleEnded, setBattleEnded] = useState(false);
   const [buttonText, setButtonText] = useState("Flee Battle");
+  const [quizFontSize, setQuizFontSize] = useState<"sm" | "base" | "lg" | "xl">("base");
+  const [quizFontFamily, setQuizFontFamily] = useState<"normal" | "noto">("normal");
 
 
 
@@ -275,12 +278,22 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
             gameState.currentRegion?.name === "Sinnoh" ? { backgroundImage: `url(/sinnoh_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}
     }>
       <div className="w-full max-w-2xl text-center">
-        <h2 className="text-lg sm:text-xl md:text-2xl mb-2 text-primary text-shadow-pixel">
-          {gym} Battle vs <span style={{ color: currentOpponent.color }}>{currentOpponent.name}</span>
-        </h2>
-        <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-4">
-          Question {currentQuestionIndex + 1} / {questions.length} | Correct: {correctAnswers}
-        </p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg sm:text-xl md:text-2xl text-primary text-shadow-pixel">
+              {gym} Battle vs <span style={{ color: currentOpponent.color }}>{currentOpponent.name}</span>
+            </h2>
+            <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
+              Question {currentQuestionIndex + 1} / {questions.length} | Correct: {correctAnswers}
+            </p>
+          </div>
+          <QuizSettings
+            fontSize={quizFontSize}
+            fontFamily={quizFontFamily}
+            onFontSizeChange={setQuizFontSize}
+            onFontFamilyChange={setQuizFontFamily}
+          />
+        </div>
 
         <div
           className={`relative w-full h-48 sm:h-64 md:h-80 border-4 border-white rounded mb-6 overflow-hidden ${battleGradient}`}
@@ -299,8 +312,14 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
           </div>
         </div>
 
-        <div className="bg-card border-4 border-border rounded p-4 sm:p-6 mb-6">
-          <p className="text-sm sm:text-base md:text-xl mb-6">{currentQuestion.q}</p>
+        <div className={`bg-card border-4 border-border rounded p-4 sm:p-6 mb-6 ${quizFontFamily === "noto" ? "font-noto" : ""}`}>
+          <p className={`mb-6 ${quizFontSize === "sm" ? "text-xs sm:text-sm" :
+              quizFontSize === "base" ? "text-sm sm:text-base md:text-xl" :
+                quizFontSize === "lg" ? "text-base sm:text-lg md:text-2xl" :
+                  "text-lg sm:text-xl md:text-3xl"
+            }`}>
+            {currentQuestion.q}
+          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {shuffledAnswers.map((answer) => {
@@ -323,7 +342,11 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
                     variant={variant}
                     onClick={() => handleAnswer(answer)}
                     disabled={isAnswered}
-                    className="py-3 px-2 w-full text-center text-sm leading-tight break-words whitespace-normal min-h-[60px] justify-center"
+                    className={`py-3 px-2 w-full text-center leading-tight break-words whitespace-normal min-h-[60px] justify-center ${quizFontSize === "sm" ? "text-xs" :
+                        quizFontSize === "base" ? "text-sm" :
+                          quizFontSize === "lg" ? "text-base" :
+                            "text-lg"
+                      }`}
                   >
                     {answer}
                   </PixelButton>
