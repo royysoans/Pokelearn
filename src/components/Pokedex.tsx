@@ -252,7 +252,7 @@ export function Pokedex() {
 
                 <button
                   onClick={() => setSelectedPokemon(null)}
-                  className="absolute top-4 right-4 p-2 hover:bg-muted rounded-full transition-colors"
+                  className="absolute top-4 right-4 p-2 hover:bg-muted rounded-full transition-colors z-50"
                 >
                   <X className="w-5 h-5" />
                 </button>

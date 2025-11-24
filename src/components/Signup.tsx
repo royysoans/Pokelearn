@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FloatingOrb } from "./FloatingOrb";
 
 interface SignupProps {
   onSwitchToLogin: () => void;
@@ -44,8 +45,24 @@ export function Signup({ onSwitchToLogin, onSignupSuccess }: SignupProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/src/assets/Kanto.jpg')" }}>
-      <div className="w-full max-w-md space-y-6 bg-black/50 p-8 rounded-lg backdrop-blur-sm">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-[url('/grid-pattern.png')] bg-fixed relative overflow-hidden">
+      {/* Animated Background Elements (Updated) */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Floating Gradient Orbs */}
+        {[...Array(8)].map((_, i) => (
+          <FloatingOrb
+            key={`orb-${i}`}
+            index={i}
+            delay={i * 2}
+            duration={20 + Math.random() * 10}
+            size={100 + Math.random() * 150}
+          />
+        ))}
+        {/* Interactive Orb */}
+        <FloatingOrb followPointer size={300} />
+      </div>
+
+      <div className="w-full max-w-md space-y-6 bg-black/50 p-8 rounded-lg backdrop-blur-sm relative z-10">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-primary text-shadow-pixel mb-2">
             PokéLearn

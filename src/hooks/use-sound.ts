@@ -93,6 +93,12 @@ export function useSound() {
       play(1046.50, t + 0.45, 0.4); // C6
 
       setTimeout(() => ctx.close(), 1000);
+    },
+    playBuddyCry: () => {
+      // Cute high-pitched chirp
+      playTone(880, 100, "sine");
+      setTimeout(() => playTone(1100, 100, "sine"), 80);
+      setTimeout(() => playTone(1320, 150, "sine"), 160);
     }
   };
 }
