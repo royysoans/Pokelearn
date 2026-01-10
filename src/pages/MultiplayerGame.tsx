@@ -5,7 +5,7 @@ import { MultiplayerBattle } from '@/components/Multiplayer/MultiplayerBattle';
 import { useGame } from '@/contexts/GameContext';
 
 export function MultiplayerGame() {
-    const { gameState, createLobby, joinLobby, submitAnswer, userId } = useMultiplayer();
+    const { gameState, createLobby, joinLobby, submitAnswer, requestRematch, userId } = useMultiplayer();
     const { currentPokemon } = useGame(); // Get selected pokemon from global context
 
     if (gameState.status === 'waiting') {
@@ -24,10 +24,8 @@ export function MultiplayerGame() {
         return (
             <MultiplayerBattle
                 gameState={gameState}
-                onSubmitAnswer={(isCorrect, damageMultiplier) => {
-                    // We need to pass types here, but for now mocking
-                    submitAnswer(isCorrect, "fire", "grass");
-                }}
+                onSubmitAnswer={submitAnswer}
+                onRequestRematch={requestRematch}
                 userId={userId || ''}
             />
         );

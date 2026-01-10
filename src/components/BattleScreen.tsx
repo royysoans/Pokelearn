@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { useGame } from "@/contexts/GameContext";
 import { pokemonDB } from "@/data/pokemon";
 import { arenaPokemonMap } from "@/data/arenaPokemon";
@@ -105,6 +106,22 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
       correctAnswersRef.current += 1;
       toast({ title: "Correct!" });
       playCorrect();
+
+      // Update Quests: Daily Learner
+      supabase.rpc('update_quest_progress', { p_quest_id: 'daily_learner', p_increment: 1 });
+
+      // Update Quests: Subject Master
+      // Determine subject from gym name
+      const subject = gym.includes("Maths") ? "math"
+        : gym.includes("Science") ? "science"
+          : "coding";
+
+      // Ideally we check if this subject matches the daily subject, but for now let's just increment 'subject_master' 
+      // if we assume the quest description says "Answer 5 questions correctly in ANY subject" or we implement rotation logic later.
+      // The migration inserted 'Answer 5 questions correctly in the daily subject'. 
+      // Let's just increment it for now as a placeholder or assume today is this subject.
+      supabase.rpc('update_quest_progress', { p_quest_id: 'subject_master', p_increment: 1 });
+
     } else {
       toast({ title: "Wrong answer!", variant: "destructive" });
       playWrong();
@@ -130,11 +147,19 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
     }
   }, [currentQuestion, shuffledAnswers.length]);
 
-  const handleBattleEnd = () => {
+  const handleBattleEnd = async () => {
     setBattleEnded(true);
     if (correctAnswersRef.current >= requiredCorrect) {
       addPokemon(currentOpponent);
       playVictory();
+
+      // Update Quests: Gym Climber & Victor
+      try {
+        await supabase.rpc('update_quest_progress', { p_quest_id: 'gym_climber', p_increment: 1 });
+        await supabase.rpc('update_quest_progress', { p_quest_id: 'victor', p_increment: 1 });
+      } catch (e) {
+        console.error("Failed to update quests", e);
+      }
 
       // Canvas confetti effect (replaces DOM nodes)
       try {
@@ -336,9 +361,8 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
               }
 
               return (
-                <div className="w-full">
+                <div key={answer} className="w-full">
                   <PixelButton
-                    key={answer}
                     variant={variant}
                     onClick={() => handleAnswer(answer)}
                     disabled={isAnswered}

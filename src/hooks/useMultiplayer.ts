@@ -20,6 +20,7 @@ export interface GameState {
     currentTurn: string | null;
     status: 'waiting' | 'active' | 'finished';
     winner: string | null;
+    lastResult: 'correct' | 'wrong' | 'too_slow' | null;
 }
 
 export const useMultiplayer = () => {
@@ -35,9 +36,8 @@ export const useMultiplayer = () => {
         currentTurn: null,
         status: 'waiting',
         winner: null,
+        lastResult: null,
     });
-
-
 
     const enterBattle = (battle: any) => {
         setGameState(prev => {
@@ -79,7 +79,7 @@ export const useMultiplayer = () => {
                     const battle = payload.new as any;
                     setGameState(prev => {
                         const myPlayerId = userId;
-                        const opponentPlayerId = myPlayerId === battle.player_1_id ? battle.player_2_id : battle.player_1_id;
+                        // const opponentPlayerId = myPlayerId === battle.player_1_id ? battle.player_2_id : battle.player_1_id;
 
                         const myHp = myPlayerId === battle.player_1_id ? battle.player_1_hp : battle.player_2_hp;
                         const opponentHp = myPlayerId === battle.player_1_id ? battle.player_2_hp : battle.player_1_hp;
@@ -99,73 +99,54 @@ export const useMultiplayer = () => {
             .subscribe();
     };
 
-    // Helper to calculate type effectiveness
-    const getDamageMultiplier = (attackerType: string, defenderType: string) => {
-        const weaknesses: Record<string, string[]> = {
-            fire: ['water', 'ground', 'rock'],
-            water: ['electric', 'grass'],
-            grass: ['fire', 'ice', 'poison', 'flying', 'bug'],
-            electric: ['ground'],
-            // ... add more types
-        };
+    const submitAnswer = async (isCorrect: boolean) => {
+        if (!gameState.battleId || !userId) return;
 
-        if (weaknesses[defenderType]?.includes(attackerType)) {
-            return 2;
+        // Call RPC to handle race conditions and secure updates
+        const { data, error } = await supabase.rpc('submit_battle_answer', {
+            p_battle_id: gameState.battleId,
+            p_player_id: userId,
+            p_current_question_index: gameState.currentQuestionIndex,
+            p_is_correct: isCorrect
+        });
+
+        if (error) {
+            console.error("Error submitting answer:", error);
+            return;
         }
-        return 1;
+
+        if (data && data.status === 'too_slow') {
+            setGameState(prev => ({ ...prev, lastResult: 'too_slow' }));
+            // Clear the message after a delay
+            setTimeout(() => {
+                setGameState(prev => ({ ...prev, lastResult: null }));
+            }, 2000);
+        } else if (data && data.status === 'correct') {
+            setGameState(prev => ({ ...prev, lastResult: 'correct' }));
+            setTimeout(() => {
+                setGameState(prev => ({ ...prev, lastResult: null }));
+            }, 1000);
+        } else if (data && data.status === 'wrong') {
+            setGameState(prev => ({ ...prev, lastResult: 'wrong' }));
+            setTimeout(() => {
+                setGameState(prev => ({ ...prev, lastResult: null }));
+            }, 1000);
+        }
     };
 
-    const submitAnswer = async (isCorrect: boolean, myPokemonType: string, opponentPokemonType: string) => {
-        if (!gameState.battleId || !userId || !gameState.opponent) return;
+    const requestRematch = async () => {
+        if (!gameState.lobbyId) return;
+        // Reset lobby status to waiting to trigger new game flow
+        // Ideally we'd have a specific 'rematch' flow, but reusing lobby logic is simplest
+        await supabase
+            .from('lobbies')
+            .update({ status: 'waiting', player_1_id: userId, player_2_id: null }) // Resetting lobby effectively
+            .eq('id', gameState.lobbyId);
 
-        if (isCorrect) {
-            // Correct Answer Logic
-            const damageMultiplier = getDamageMultiplier(opponentPokemonType, myPokemonType);
-            const damage = 1 * damageMultiplier;
-
-            const updates: any = {
-                current_question_index: gameState.currentQuestionIndex + 1,
-                wrong_answer_count: 0 // Reset wrong count on correct answer
-            };
-
-            if (gameState.isHost) {
-                updates.player_2_hp = gameState.opponentHp - damage;
-            } else {
-                updates.player_1_hp = gameState.opponentHp - damage;
-            }
-
-            // Check for winner
-            let newPlayer1Hp = gameState.isHost ? (updates.player_1_hp || gameState.myHp) : gameState.opponentHp;
-            let newPlayer2Hp = gameState.isHost ? gameState.opponentHp : (updates.player_2_hp || gameState.myHp);
-
-            if (updates.player_1_hp !== undefined) newPlayer1Hp = updates.player_1_hp;
-            if (updates.player_2_hp !== undefined) newPlayer2Hp = updates.player_2_hp;
-
-            if (newPlayer1Hp <= 0) updates.winner_id = gameState.opponent.id;
-            else if (newPlayer2Hp <= 0) updates.winner_id = userId;
-            else if (updates.current_question_index >= gameState.questions.length) {
-                // End of questions
-                if (newPlayer1Hp > newPlayer2Hp) updates.winner_id = gameState.isHost ? userId : gameState.opponent.id;
-                else if (newPlayer2Hp > newPlayer1Hp) updates.winner_id = gameState.isHost ? gameState.opponent.id : userId;
-                else updates.winner_id = gameState.isHost ? userId : gameState.opponent.id;
-            }
-
-            await supabase
-                .from('battles')
-                .update(updates)
-                .eq('id', gameState.battleId)
-                .eq('current_question_index', gameState.currentQuestionIndex);
-        } else {
-            // Wrong Answer Logic -> Call RPC
-            const { error } = await supabase.rpc('handle_wrong_answer', {
-                p_battle_id: gameState.battleId,
-                p_player_id: userId
-            });
-
-            if (error) {
-                console.error("Error submitting wrong answer:", error);
-            }
-        }
+        // Actually, a better way for rematch in this current architecture:
+        // Both players stay in lobby. Host triggers new game.
+        // For now, let's just reload the page or reset state to 'waiting'
+        window.location.reload();
     };
 
     const [userId, setUserId] = useState<string | null>(null);
@@ -247,7 +228,7 @@ export const useMultiplayer = () => {
     };
 
     const subscribeToLobby = (lobbyId: string) => {
-        const channel = supabase
+        supabase
             .channel(`lobby:${lobbyId}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'lobbies', filter: `id=eq.${lobbyId}` },
                 async (payload) => {
@@ -258,8 +239,7 @@ export const useMultiplayer = () => {
                         // Game started!
                         if (currentGameState.isHost) {
                             // Host generates questions and creates battle
-                            // Use the existing generateQuestions from data/questions which handles Edge Functions and fallbacks
-                            const questions = await generateQuestions(newLobby.topic, 10);
+                            const questions = await generateQuestions(newLobby.topic, 13);
 
                             const { data: battle, error: battleError } = await supabase
                                 .from('battles')
@@ -268,22 +248,21 @@ export const useMultiplayer = () => {
                                     questions,
                                     current_turn: newLobby.player_1_id, // Host starts
                                     player_1_id: newLobby.player_1_id,
-                                    player_2_id: newLobby.player_2_id
+                                    player_2_id: newLobby.player_2_id,
+                                    player_1_hp: 10,
+                                    player_2_hp: 10
                                 })
                                 .select()
                                 .single();
 
                             if (battleError) {
                                 console.error("Error creating battle:", battleError);
-                                alert(`Error creating battle: ${battleError.message}. Please run the migration SQL.`);
                                 return;
                             }
 
                             if (battle) enterBattle(battle);
                         } else {
                             // Joiner waits for battle creation
-                            // We'll listen for battle creation via a separate subscription or query
-                            // For simplicity, let's query for the battle associated with this lobby
                             const { data: battles } = await supabase.from('battles').select('*').eq('lobby_id', lobbyId);
                             if (battles && battles.length > 0) {
                                 enterBattle(battles[0]);
@@ -294,9 +273,6 @@ export const useMultiplayer = () => {
             .subscribe();
 
         // Also listen for battle creation if not host
-        // We use a timeout to allow state to settle, but better to rely on ref or just subscribe always
-        // If we are host, this subscription is redundant but harmless
-
         supabase
             .channel(`battles:lobby:${lobbyId}`)
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'battles', filter: `lobby_id=eq.${lobbyId}` },
@@ -309,13 +285,12 @@ export const useMultiplayer = () => {
             .subscribe();
     };
 
-
-
     return {
         gameState,
         createLobby,
         joinLobby,
         submitAnswer,
+        requestRematch,
         userId
     };
 };

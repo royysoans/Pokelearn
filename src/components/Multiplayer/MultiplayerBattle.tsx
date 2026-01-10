@@ -1,24 +1,24 @@
 import { useState, useEffect } from 'react';
-import { useMultiplayer } from '@/hooks/useMultiplayer';
 import { PixelButton } from '@/components/PixelButton';
-import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSound } from '@/hooks/use-sound';
 
 interface MultiplayerBattleProps {
     gameState: any; // Using any for now, should be typed
-    onSubmitAnswer: (isCorrect: boolean, damageMultiplier: number) => void;
+    onSubmitAnswer: (isCorrect: boolean) => void;
+    onRequestRematch: () => void;
     userId: string;
 }
 
-export function MultiplayerBattle({ gameState, onSubmitAnswer, userId }: MultiplayerBattleProps) {
+export function MultiplayerBattle({ gameState, onSubmitAnswer, onRequestRematch, userId }: MultiplayerBattleProps) {
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [showResult, setShowResult] = useState(false);
     const [isCorrect, setIsCorrect] = useState(false);
+    const { playCorrect, playWrong, playVictory } = useSound();
 
     const questions = gameState.questions || [];
     const currentQuestion = questions[gameState.currentQuestionIndex];
-    // const isMyTurn = gameState.currentTurn === userId; // Removed for Race Mode
 
     // Reset local state when question changes
     useEffect(() => {
@@ -26,6 +26,15 @@ export function MultiplayerBattle({ gameState, onSubmitAnswer, userId }: Multipl
         setShowResult(false);
         setIsCorrect(false);
     }, [gameState.currentQuestionIndex]);
+
+    // Play sounds based on last result
+    useEffect(() => {
+        if (gameState.lastResult === 'correct') {
+            playCorrect();
+        } else if (gameState.lastResult === 'wrong') {
+            playWrong();
+        }
+    }, [gameState.lastResult, playCorrect, playWrong]);
 
     const handleOptionClick = (option: string) => {
         if (showResult) return; // Prevent multiple clicks
@@ -35,20 +44,19 @@ export function MultiplayerBattle({ gameState, onSubmitAnswer, userId }: Multipl
         setIsCorrect(correct);
         setShowResult(true);
 
-        // Calculate damage multiplier based on types (mock logic for now)
-        const damageMultiplier = 1;
-
         // Submit immediately
-        onSubmitAnswer(correct, damageMultiplier);
-
-        // We don't hide result immediately, we wait for the next question to arrive via Realtime
+        onSubmitAnswer(correct);
     };
 
     // Shake effect state
     const [shake, setShake] = useState(false);
+    const [attackAnim, setAttackAnim] = useState<'left' | 'right' | null>(null);
 
-    // Trigger shake on damage (when HP decreases)
+    // Trigger shake and attack animation on damage
     useEffect(() => {
+        // We need to detect WHO took damage to animate correctly
+        // This is a bit tricky with just state snapshots, but we can infer from HP changes if we tracked previous HP
+        // For now, let's just animate based on low HP or generic damage
         if (gameState.myHp < 10 || gameState.opponentHp < 10) {
             setShake(true);
             setTimeout(() => setShake(false), 500);
@@ -57,6 +65,8 @@ export function MultiplayerBattle({ gameState, onSubmitAnswer, userId }: Multipl
 
     if (gameState.status === 'finished' || gameState.winner) {
         const iWon = gameState.winner === userId;
+        if (iWon) playVictory();
+
         return (
             <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-1000">
                 <motion.div
@@ -74,12 +84,21 @@ export function MultiplayerBattle({ gameState, onSubmitAnswer, userId }: Multipl
                     <p className="text-3xl text-muted-foreground font-pixel">
                         {iWon ? "You are the Pokémon Master!" : "Better luck next time..."}
                     </p>
-                    <PixelButton
-                        onClick={() => window.location.reload()}
-                        className="text-2xl px-12 py-6 w-full"
-                    >
-                        Play Again
-                    </PixelButton>
+                    <div className="flex gap-4 justify-center">
+                        <PixelButton
+                            onClick={onRequestRematch}
+                            className="text-2xl px-12 py-6"
+                        >
+                            Rematch
+                        </PixelButton>
+                        <PixelButton
+                            onClick={() => window.location.reload()}
+                            variant="secondary"
+                            className="text-2xl px-12 py-6"
+                        >
+                            Exit
+                        </PixelButton>
+                    </div>
                 </motion.div>
             </div>
         );
@@ -105,6 +124,22 @@ export function MultiplayerBattle({ gameState, onSubmitAnswer, userId }: Multipl
     return (
         <div className={`w-full h-screen bg-slate-900 p-4 flex flex-col items-center justify-center space-y-4 overflow-hidden ${shake ? 'animate-shake' : ''}`}>
 
+            {/* Too Slow Overlay */}
+            <AnimatePresence>
+                {gameState.lastResult === 'too_slow' && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.5 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+                    >
+                        <h1 className="text-8xl font-black text-red-600 text-shadow-lg -rotate-12 border-4 border-white p-4 bg-black/50 backdrop-blur-sm rounded-xl">
+                            TOO SLOW!
+                        </h1>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* VS Header */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
                 <div className="text-4xl font-black text-white italic tracking-tighter text-shadow-lg bg-red-600 px-3 py-1 transform -skew-x-12 border-2 border-white">
@@ -119,7 +154,7 @@ export function MultiplayerBattle({ gameState, onSubmitAnswer, userId }: Multipl
                 <motion.div
                     initial={{ x: -100, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    className="bg-slate-800/50 p-4 rounded-xl border-2 border-blue-500 backdrop-blur-sm h-full flex flex-col justify-center"
+                    className="bg-slate-800/50 p-4 rounded-xl border-2 border-blue-500 backdrop-blur-sm h-full flex flex-col justify-center relative"
                 >
                     <div className="flex flex-col space-y-2">
                         <div className="flex justify-between items-end">
@@ -132,8 +167,8 @@ export function MultiplayerBattle({ gameState, onSubmitAnswer, userId }: Multipl
                                 <div
                                     key={i}
                                     className={`flex-1 rounded-[1px] transition-all duration-300 ${i < gameState.myHp
-                                            ? 'bg-gradient-to-b from-green-400 to-green-600 shadow-[0_0_5px_rgba(34,197,94,0.5)]'
-                                            : 'bg-slate-700'
+                                        ? 'bg-gradient-to-b from-green-400 to-green-600 shadow-[0_0_5px_rgba(34,197,94,0.5)]'
+                                        : 'bg-slate-700'
                                         }`}
                                 />
                             ))}
@@ -160,7 +195,7 @@ export function MultiplayerBattle({ gameState, onSubmitAnswer, userId }: Multipl
                 <motion.div
                     initial={{ x: 100, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    className="bg-slate-800/50 p-4 rounded-xl border-2 border-red-500 backdrop-blur-sm h-full flex flex-col justify-center"
+                    className="bg-slate-800/50 p-4 rounded-xl border-2 border-red-500 backdrop-blur-sm h-full flex flex-col justify-center relative"
                 >
                     <div className="flex flex-col space-y-2 text-right">
                         <div className="flex justify-between items-end flex-row-reverse">
@@ -173,8 +208,8 @@ export function MultiplayerBattle({ gameState, onSubmitAnswer, userId }: Multipl
                                 <div
                                     key={i}
                                     className={`flex-1 rounded-[1px] transition-all duration-300 ${i < gameState.opponentHp
-                                            ? 'bg-gradient-to-b from-red-400 to-red-600 shadow-[0_0_5px_rgba(239,68,68,0.5)]'
-                                            : 'bg-slate-700'
+                                        ? 'bg-gradient-to-b from-red-400 to-red-600 shadow-[0_0_5px_rgba(239,68,68,0.5)]'
+                                        : 'bg-slate-700'
                                         }`}
                                 />
                             ))}
@@ -211,7 +246,7 @@ export function MultiplayerBattle({ gameState, onSubmitAnswer, userId }: Multipl
                             <h3 className="text-lg font-bold text-yellow-400 tracking-widest uppercase animate-pulse">
                                 RACE! Answer First!
                             </h3>
-                            <p className="text-xl md:text-2xl font-bold text-white leading-tight drop-shadow-md line-clamp-3">
+                            <p className="text-xl md:text-2xl font-bold text-white leading-tight drop-shadow-md">
                                 {currentQuestion.q}
                             </p>
                         </div>

@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { regions } from "@/data/regions";
 import { PixelButton } from "./PixelButton";
+import { DailyChallenges } from "./DailyChallenges";
 
 export function RegionMap() {
     const { setCurrentPage, setCurrentRegion, hasDefeatedGymLeader } = useGame();
+    const [showChallenges, setShowChallenges] = useState(false);
 
     const getRegionColor = (regionName: string) => {
         const colors: Record<string, string> = {
@@ -78,7 +81,10 @@ export function RegionMap() {
                     })}
                 </div>
 
-                <div className="text-center space-x-4">
+                <div className="text-center space-x-4 flex flex-wrap justify-center gap-y-2">
+                    <PixelButton onClick={() => setShowChallenges(true)} variant="secondary">
+                        Daily Challenges
+                    </PixelButton>
                     <PixelButton onClick={() => setCurrentPage("pokedex")}>
                         View Pokédex
                     </PixelButton>
@@ -93,6 +99,21 @@ export function RegionMap() {
                     </PixelButton>
                 </div>
             </div>
+
+            {/* Daily Challenges Modal */}
+            {showChallenges && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
+                    <div className="w-full max-w-md relative">
+                        <button
+                            onClick={() => setShowChallenges(false)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold border-2 border-white z-10 hover:bg-red-600"
+                        >
+                            X
+                        </button>
+                        <DailyChallenges />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
