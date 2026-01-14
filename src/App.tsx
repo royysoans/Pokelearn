@@ -91,7 +91,6 @@ const AnimatedRoutes = () => {
         <Route path="/pokedex" element={<PageTransition><AuthGuard><Pokedex /></AuthGuard></PageTransition>} />
         <Route path="/badges" element={<PageTransition><AuthGuard><Badges /></AuthGuard></PageTransition>} />
         <Route path="/leaderboard" element={<PageTransition><AuthGuard><Leaderboard /></AuthGuard></PageTransition>} />
-        <Route path="/leaderboard" element={<PageTransition><AuthGuard><Leaderboard /></AuthGuard></PageTransition>} />
         <Route path="/multiplayer" element={<PageTransition><AuthGuard><MultiplayerGame /></AuthGuard></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
