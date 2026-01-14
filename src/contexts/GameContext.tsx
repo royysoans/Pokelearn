@@ -12,6 +12,7 @@ interface GameContextType {
   gameState: GameState;
   currentPage: GamePage;
   setCurrentPage: (page: GamePage) => void;
+  updateProfile: (updates: { name?: string; avatarId?: string; bio?: string; cardBackground?: string }) => Promise<void>;
   addPokemon: (pokemon: Pokemon, immediate?: boolean) => Promise<void>;
   setCurrentRegion: (region: Region | null) => void;
   addBadge: (badge: string) => void;
@@ -83,7 +84,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     try {
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("name")
+        .select("name, avatar_id, bio, card_background")
         .eq("id", user.id)
         .single();
       if (profileError) throw profileError;
@@ -113,6 +114,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       const loadedState: GameState = {
         name: profile?.name || "Trainer",
+        avatarId: profile?.avatar_id || "trainer-1",
+        bio: profile?.bio || "Ready to become a Pokémon Master!",
+        cardBackground: profile?.card_background || "default",
         pokemon: Array.from(new Map(rawPokemon.map((p) => [p.id, p])).values()),
         badges: [...new Set(userBadges?.map((b) => b.badge) || [])],
         currentRegion: progress?.current_region
@@ -436,6 +440,43 @@ export function GameProvider({ children }: { children: ReactNode }) {
     saveGameState();
   };
 
+  const updateProfile = async (updates: { name?: string; avatarId?: string; bio?: string; cardBackground?: string }) => {
+    if (!user) return;
+
+    try {
+      // Optimistic update
+      setGameState((prev) => ({
+        ...prev,
+        ...updates,
+      }));
+
+      const dbUpdates: any = {};
+      if (updates.name) dbUpdates.name = updates.name;
+      if (updates.avatarId) dbUpdates.avatar_id = updates.avatarId;
+      if (updates.bio) dbUpdates.bio = updates.bio;
+      if (updates.cardBackground) dbUpdates.card_background = updates.cardBackground;
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(dbUpdates)
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile Updated",
+        description: "Your trainer card has been updated!",
+      });
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Update Failed",
+        description: "Could not update your profile.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const evolvePokemon = async (pokemonId: number): Promise<Pokemon | null> => {
     const pokemon = gameState.pokemon.find(p => p.id === pokemonId);
     if (!pokemon) {
@@ -506,6 +547,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         gameState,
         currentPage,
         setCurrentPage,
+        updateProfile,
         addPokemon,
         setCurrentRegion,
         addBadge,

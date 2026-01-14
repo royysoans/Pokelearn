@@ -1,4 +1,5 @@
 import { PixelButton } from "./PixelButton";
+import { ProfileCustomization } from "@/components/ProfileCustomization";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -59,6 +60,10 @@ export function HomePage() {
               >
                 Logout
               </PixelButton>
+
+              <div className="pt-2">
+                <ProfileCustomization />
+              </div>
             </div>
           </div>
         ) : (

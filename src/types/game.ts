@@ -26,6 +26,9 @@ export interface Question {
 
 export interface GameState {
   name: string;
+  avatarId?: string;
+  bio?: string;
+  cardBackground?: string;
   pokemon: Pokemon[];
   badges: string[];
   currentRegion: Region | null;
