@@ -66,7 +66,7 @@ export function BuddyDisplay() {
                 >
                     {/* Speech Bubble (Hover or Interacting) */}
                     <AnimatePresence>
-                        {(isInteracting || true) && ( // Always render but control opacity via CSS group-hover or state
+                        {isInteracting && ( // Always render but control opacity via CSS group-hover or state
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.8, y: 10 }}
                                 animate={{

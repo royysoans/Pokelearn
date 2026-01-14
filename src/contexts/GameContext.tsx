@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GameState, GamePage, Pokemon, Region } from "@/types/game";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,6 +35,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const prevUserRef = useRef<User | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isGameLoadedRef = useRef(false); // CRITICAL: Track if state is valid from DB
+  const { toast } = useToast();
   const [isGameLoaded, setIsGameLoaded] = useState(false);
 
   const [gameState, setGameState] = useState<GameState>({
@@ -71,66 +72,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     else navigate(`/${page}`);
   };
 
-  // ---------------- LOAD GAME ----------------
-  useEffect(() => {
-    const prevUser = prevUserRef.current;
-    prevUserRef.current = user;
 
-    // Reset load status on user change
-    if (prevUser !== user) {
-      isGameLoadedRef.current = false;
-      setIsGameLoaded(false);
-    }
-
-    if (prevUser && !user) {
-      // User is logging out - save their data first
-      console.log("🚨 User logging out, saving data before reset");
-      saveGameState(prevUser);
-
-      // CRITICAL: Wait a bit before resetting state to ensure save completes
-      setTimeout(() => {
-        console.log("🔄 Resetting local state after logout save");
-        setGameState({
-          name: "Trainer",
-          pokemon: [],
-          badges: [],
-          currentRegion: null,
-          completedLevels: {},
-          currentPage: "home",
-          buddyPokemonId: null,
-        });
-      }, 500); // Give save time to complete
-    } else if (user) {
-      loadGameState();
-    } else if (!prevUser && !user) {
-      // Initial render with no user
-      setGameState({
-        name: "Trainer",
-        pokemon: [],
-        badges: [],
-        currentRegion: null,
-        completedLevels: {},
-        currentPage: "home",
-        buddyPokemonId: null,
-      });
-    }
-  }, [user]);
-
-  // ---------------- AUTO SAVE ----------------
-  useEffect(() => {
-    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    // Only auto-save if user is logged in AND has some data
-    // This prevents saving empty state during logout
-    if (user && (gameState.pokemon.length > 0 || Object.keys(gameState.completedLevels).length > 0)) {
-      saveTimeoutRef.current = setTimeout(() => saveGameState(), 2000);
-    }
-    return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    };
-  }, [gameState, user]);
 
   // ---------------- LOAD STATE ----------------
-  const loadGameState = async () => {
+  const loadGameState = useCallback(async () => {
     if (!user) return;
 
     if (!user) return;
@@ -193,13 +138,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
     }
-  };
+  }, [user, toast]);
 
   // ---------------- SAVE STATE ----------------
   const isSavingRef = useRef(false);
-  const { toast } = useToast(); // Need to import useToast if not available, but it's likely available in context or hook
 
-  const saveGameState = async (overrideUser?: User | null) => {
+
+  const saveGameState = useCallback(async (overrideUser?: User | null) => {
     const userToUse = overrideUser || user;
     if (!userToUse) {
       console.warn("⚠️ No user found — skipping save");
@@ -299,7 +244,74 @@ export function GameProvider({ children }: { children: ReactNode }) {
     } finally {
       isSavingRef.current = false;
     }
-  };
+  }, [user, gameState, currentPage, toast]);
+
+  // Keep a ref to the latest saveGameState function to avoid circular dependencies in effects
+  const saveGameStateRef = useRef(saveGameState);
+  useEffect(() => {
+    saveGameStateRef.current = saveGameState;
+  }, [saveGameState]);
+
+  // ---------------- LOAD GAME ----------------
+  useEffect(() => {
+    const prevUser = prevUserRef.current;
+    prevUserRef.current = user;
+
+    // Reset load status on user change
+    if (prevUser !== user) {
+      isGameLoadedRef.current = false;
+      setIsGameLoaded(false);
+    }
+
+    if (prevUser && !user) {
+      // User is logging out - save their data first
+      console.log("🚨 User logging out, saving data before reset");
+      saveGameStateRef.current(prevUser);
+
+      // CRITICAL: Wait a bit before resetting state to ensure save completes
+      setTimeout(() => {
+        console.log("🔄 Resetting local state after logout save");
+        setGameState({
+          name: "Trainer",
+          pokemon: [],
+          badges: [],
+          currentRegion: null,
+          completedLevels: {},
+          currentPage: "home",
+          buddyPokemonId: null,
+        });
+      }, 500); // Give save time to complete
+    } else if (user) {
+      loadGameState();
+    } else if (!prevUser && !user) {
+      // Initial render with no user
+      setGameState({
+        name: "Trainer",
+        pokemon: [],
+        badges: [],
+        currentRegion: null,
+        completedLevels: {},
+        currentPage: "home",
+        buddyPokemonId: null,
+      });
+    }
+  }, [user, loadGameState]);
+
+  // ---------------- AUTO SAVE ----------------
+  useEffect(() => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    // Only auto-save if user is logged in AND has some data
+    // This prevents saving empty state during logout
+    if (user && (gameState.pokemon.length > 0 || Object.keys(gameState.completedLevels).length > 0)) {
+      saveTimeoutRef.current = setTimeout(() => saveGameState(), 2000);
+    }
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [gameState, user, saveGameState]);
+
+
+
 
   // ---------------- GAME ACTIONS ----------------
   const addPokemon = async (pokemon: Pokemon, immediate: boolean = false) => {
