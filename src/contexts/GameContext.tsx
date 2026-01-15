@@ -169,7 +169,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
 
     isSavingRef.current = true;
-    isSavingRef.current = true;
 
     try {
       // 1. Save Progress (Upsert is safe here as it's 1:1)
@@ -186,7 +185,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
           },
           { onConflict: "user_id" }
         );
-      if (progressError) throw progressError;
       if (progressError) throw progressError;
 
       // 2. Save Pokemon (Additive only - NO DELETE)
@@ -210,7 +208,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
           const { error: pokemonError } = await supabase.from("user_pokemons").insert(pokemonInserts);
           if (pokemonError) throw pokemonError;
-          if (pokemonError) throw pokemonError;
         }
       }
 
@@ -233,7 +230,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
             badge: b,
           }));
           const { error: badgeErr } = await supabase.from("user_badges").insert(badgeInserts);
-          if (badgeErr) throw badgeErr;
           if (badgeErr) throw badgeErr;
         }
       }
@@ -261,19 +257,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const prevUser = prevUserRef.current;
     prevUserRef.current = user;
 
-    // Reset load status on user change
-    if (prevUser !== user) {
-      isGameLoadedRef.current = false;
-      setIsGameLoaded(false);
-    }
-
     if (prevUser && !user) {
-      // User is logging out - save their data first
+      // User is logging out - save their data BEFORE resetting isGameLoadedRef
       console.log("🚨 User logging out, saving data before reset");
-      saveGameStateRef.current(prevUser);
 
-      // CRITICAL: Wait a bit before resetting state to ensure save completes
-      setTimeout(() => {
+      // CRITICAL FIX: Call save FIRST while isGameLoadedRef is still true
+      const savePromise = saveGameStateRef.current(prevUser);
+
+      // CRITICAL: Wait for save to complete before resetting state
+      setTimeout(async () => {
+        try {
+          await savePromise;
+          console.log("✅ Logout save completed successfully");
+        } catch (err) {
+          console.error("❌ Logout save failed:", err);
+        }
+
+        // Reset load status AFTER save completes
+        isGameLoadedRef.current = false;
+        setIsGameLoaded(false);
+
         console.log("🔄 Resetting local state after logout save");
         setGameState({
           name: "Trainer",
@@ -285,7 +288,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
           buddyPokemonId: null,
         });
       }, 500); // Give save time to complete
-    } else if (user) {
+    } else if (prevUser !== user && user) {
+      // User changed (login or switch) - reset and load new data
+      isGameLoadedRef.current = false;
+      setIsGameLoaded(false);
       loadGameState();
     } else if (!prevUser && !user) {
       // Initial render with no user
@@ -314,7 +320,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
     };
   }, [gameState, user, saveGameState]);
 
+  // ---------------- VISIBILITY CHANGE SAVE ----------------
+  // Save data when user switches tabs or minimizes browser
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && user && isGameLoadedRef.current) {
+        console.log("📤 Tab hidden - triggering emergency save");
+        saveGameState();
+      }
+    };
 
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user, saveGameState]);
 
 
   // ---------------- GAME ACTIONS ----------------
@@ -539,6 +559,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const setBuddy = (pokemonId: number | null) => {
     setGameState(prev => ({ ...prev, buddyPokemonId: pokemonId }));
+    // Trigger immediate save to prevent data loss if app closes
+    setTimeout(() => saveGameState(), 0);
   };
 
   return (

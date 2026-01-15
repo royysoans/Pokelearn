@@ -33,9 +33,20 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   const [shareMessage, setShareMessage] = useState("");
   const [battleEnded, setBattleEnded] = useState(false);
   const [buttonText, setButtonText] = useState("Flee Battle");
-  const [quizFontSize, setQuizFontSize] = useState<"sm" | "base" | "lg" | "xl">("base");
-  const [quizFontFamily, setQuizFontFamily] = useState<"normal" | "noto">("normal");
+  const [quizFontSize, setQuizFontSize] = useState<"sm" | "base" | "lg" | "xl">(() =>
+    (localStorage.getItem("quizFontSize") as "sm" | "base" | "lg" | "xl") || "base"
+  );
+  const [quizFontFamily, setQuizFontFamily] = useState<"normal" | "noto">(() =>
+    (localStorage.getItem("quizFontFamily") as "normal" | "noto") || "normal"
+  );
 
+  useEffect(() => {
+    localStorage.setItem("quizFontSize", quizFontSize);
+  }, [quizFontSize]);
+
+  useEffect(() => {
+    localStorage.setItem("quizFontFamily", quizFontFamily);
+  }, [quizFontFamily]);
 
 
   useEffect(() => {
@@ -43,6 +54,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
 
     const loadQuestions = async () => {
       const regionName = gameState.currentRegion!.name;
+
 
       // Get fixed Pokemon based on region, gym, and level
       let pokemonKey: string;

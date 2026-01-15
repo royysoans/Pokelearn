@@ -239,28 +239,34 @@ export const useMultiplayer = () => {
                         // Game started!
                         if (currentGameState.isHost) {
                             // Host generates questions and creates battle
-                            const questions = await generateQuestions(newLobby.topic, 13);
+                            try {
+                                const questions = await generateQuestions(newLobby.topic, 13);
 
-                            const { data: battle, error: battleError } = await supabase
-                                .from('battles')
-                                .insert({
-                                    lobby_id: lobbyId,
-                                    questions,
-                                    current_turn: newLobby.player_1_id, // Host starts
-                                    player_1_id: newLobby.player_1_id,
-                                    player_2_id: newLobby.player_2_id,
-                                    player_1_hp: 10,
-                                    player_2_hp: 10
-                                })
-                                .select()
-                                .single();
+                                const { data: battle, error: battleError } = await supabase
+                                    .from('battles')
+                                    .insert({
+                                        lobby_id: lobbyId,
+                                        questions,
+                                        current_turn: newLobby.player_1_id, // Host starts
+                                        player_1_id: newLobby.player_1_id,
+                                        player_2_id: newLobby.player_2_id,
+                                        player_1_hp: 10,
+                                        player_2_hp: 10
+                                    })
+                                    .select()
+                                    .single();
 
-                            if (battleError) {
-                                console.error("Error creating battle:", battleError);
-                                return;
+                                if (battleError) throw battleError;
+
+                                if (battle) enterBattle(battle);
+                            } catch (error) {
+                                console.error("Error creating battle:", error);
+                                // Revert lobby to waiting if battle creation fails so they can try again
+                                await supabase
+                                    .from('lobbies')
+                                    .update({ status: 'waiting', player_2_id: null })
+                                    .eq('id', lobbyId);
                             }
-
-                            if (battle) enterBattle(battle);
                         } else {
                             // Joiner waits for battle creation
                             const { data: battles } = await supabase.from('battles').select('*').eq('lobby_id', lobbyId);

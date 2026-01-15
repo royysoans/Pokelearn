@@ -56,7 +56,15 @@ export const ProfileCustomization = () => {
                 cacheBust: true,
                 pixelRatio: 4, // High quality
                 quality: 1.0,
-                style: { transform: 'scale(1)' }
+                style: { transform: 'scale(1)' },
+                // Fix: Skip external stylesheets that cause CORS SecurityError
+                filter: (node) => {
+                    // Skip Google Fonts link elements that cause cssRules access error
+                    if (node instanceof HTMLLinkElement && node.href?.includes('fonts.googleapis.com')) {
+                        return false;
+                    }
+                    return true;
+                }
             });
             return dataUrl;
         } catch (error) {
@@ -90,7 +98,10 @@ export const ProfileCustomization = () => {
                     text: 'Check out my Trainer Card on Pokelearn!',
                 });
             } catch (err) {
-                console.log('Share cancelled or failed', err);
+                // Only log in dev mode - user cancelling share is expected behavior
+                if (import.meta.env.DEV) {
+                    console.log('Share cancelled or failed', err);
+                }
             }
         } else {
             // Fallback for desktop where file sharing isn't supported via Web API
