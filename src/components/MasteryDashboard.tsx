@@ -32,6 +32,10 @@ export function MasteryDashboard() {
             case "Johto": return "/jhoto_bag.png";
             case "Hoenn": return "/hoenn_bag.png";
             case "Sinnoh": return "/sinnoh_bag.png";
+            case "Unova": return "/unova_bag.png";
+            case "Kalos": return "/kalos_bag.png";
+            case "Alola": return "/alola_bag.png";
+            case "Galar": return "/galar_bag.png";
             default: return "";
         }
     };

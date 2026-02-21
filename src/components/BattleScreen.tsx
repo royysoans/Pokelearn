@@ -239,10 +239,9 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
         correctAnswersRef.current = 0;
         setSelectedAnswer(null);
         setIsAnswered(false);
+        setBattleEnded(false);
       } else {
-        if (level !== "leader") {
-          setTimeout(() => setCurrentPage("gyms"), 2000);
-        }
+        // User must click Exit Battle manually
       }
     } else {
       toast({
@@ -250,7 +249,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
         description: `You need ${requiredCorrect} correct to win.`,
         variant: "destructive"
       });
-      setTimeout(() => setCurrentPage("gyms"), 1500);
+      setButtonText("Exit Battle");
     }
   };
 
@@ -291,12 +290,25 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   const background = gameState.currentRegion?.background || "";
   const battleGradient = "bg-gradient-to-br from-fighting via-fire to-electric";
 
+  const getBackgroundImage = (regionName: string | undefined) => {
+    switch (regionName) {
+      case "Kanto": return "url(/kanto_bag.png)";
+      case "Johto": return "url(/jhoto_bag.png)";
+      case "Hoenn": return "url(/hoenn_bag.png)";
+      case "Sinnoh": return "url(/sinnoh_bag.png)";
+      case "Unova": return "url(/unova_bag.png)";
+      case "Kalos": return "url(/kalos_bag.png)";
+      case "Alola": return "url(/alola_bag.png)";
+      case "Galar": return "url(/galar_bag.png)";
+      default: return "";
+    }
+  };
+
+  const bgImage = getBackgroundImage(gameState.currentRegion?.name);
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4" style={
-      gameState.currentRegion?.name === "Kanto" ? { backgroundImage: `url(/kanto_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } :
-        gameState.currentRegion?.name === "Johto" ? { backgroundImage: `url(/jhoto_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } :
-          gameState.currentRegion?.name === "Hoenn" ? { backgroundImage: `url(/hoenn_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } :
-            gameState.currentRegion?.name === "Sinnoh" ? { backgroundImage: `url(/sinnoh_bag.png)`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}
+      bgImage ? { backgroundImage: bgImage, backgroundSize: 'cover', backgroundPosition: 'center' } : {}
     }>
       <div className="w-full max-w-2xl text-center">
         <div className="flex items-center justify-between mb-4">

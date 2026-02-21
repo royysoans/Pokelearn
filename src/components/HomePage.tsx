@@ -55,22 +55,6 @@ export function HomePage() {
 
               <PixelButton
                 variant="secondary"
-                onClick={() => setCurrentPage("mastery")}
-                className="w-full max-w-xs"
-              >
-                Learning Dashboard
-              </PixelButton>
-
-              <PixelButton
-                variant="success"
-                onClick={() => setCurrentPage("ai-training" as any)}
-                className="w-full max-w-xs border-emerald-500 shadow-emerald-500/20"
-              >
-                AI Training Center
-              </PixelButton>
-
-              <PixelButton
-                variant="secondary"
                 onClick={handleLogout}
                 className="w-full max-w-xs"
               >

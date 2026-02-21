@@ -20,46 +20,56 @@ export function AITrainingSetup() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center p-4 bg-slate-900 bg-cover bg-center" style={{ backgroundImage: `url('/Unova.jpg')` }}>
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div className="flex min-h-screen items-center justify-center p-4 bg-slate-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(6,182,212,0.15),rgba(255,255,255,0))]">
 
             <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="relative z-10 bg-card/90 border-4 border-primary rounded-xl p-8 max-w-lg w-full shadow-2xl shadow-primary/20"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative z-10 bg-slate-900/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-8 max-w-lg w-full shadow-2xl shadow-cyan-500/10"
             >
-                <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-primary text-shadow-pixel mb-2 uppercase tracking-wider">AI Training Center</h2>
-                    <p className="text-muted-foreground text-sm">Train on any topic you want with Professor Oak!</p>
+                {/* Decorative Tech Rings */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-2xl pointer-events-none">
+                    <div className="absolute -top-1/2 -left-1/2 w-full h-full border border-cyan-500/10 rounded-full animate-spin-slow"></div>
+                    <div className="absolute -bottom-1/2 -right-1/2 w-full h-full border border-blue-500/10 rounded-full animate-spin-slow" style={{ animationDirection: 'reverse' }}></div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="text-center mb-10 relative z-10">
+                    <div className="flex justify-center mb-4">
+                        <div className="h-16 w-16 bg-cyan-500/10 rounded-2xl border border-cyan-400/30 flex items-center justify-center">
+                            <span className="text-4xl">🧬</span>
+                        </div>
+                    </div>
+                    <h2 className="text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2 tracking-tight">AI Data Center</h2>
+                    <p className="text-cyan-200/60 text-sm font-medium">Initialize a custom neural training protocol.</p>
+                </div>
+
+                <div className="space-y-8 relative z-10">
                     <div>
-                        <label className="block text-sm font-bold text-foreground mb-2 flex items-center gap-2">
-                            <span className="text-xl">🎯</span> What do you want to learn?
+                        <label className="text-sm font-semibold text-cyan-100 mb-3 flex items-center gap-2 uppercase tracking-wider">
+                            <span className="text-cyan-400">01.</span> Subject Directive
                         </label>
                         <input
                             type="text"
-                            placeholder="e.g. World War 2, Python, Solar System..."
+                            placeholder="e.g. quantum physics, french revolution..."
                             value={topic}
                             onChange={(e) => setTopic(e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-border rounded-lg bg-background text-lg focus:border-primary focus:outline-none transition-colors"
+                            className="w-full px-5 py-4 bg-slate-950/50 border border-cyan-500/20 rounded-xl text-lg text-cyan-50 placeholder:text-cyan-900/50 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 focus:outline-none transition-all shadow-inner"
                             autoFocus
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-foreground mb-2 flex items-center gap-2">
-                            <span className="text-xl">📝</span> Number of Questions
+                        <label className="text-sm font-semibold text-cyan-100 mb-3 flex items-center gap-2 uppercase tracking-wider">
+                            <span className="text-cyan-400">02.</span> Iteration Count
                         </label>
                         <div className="flex gap-3">
                             {[5, 10, 15].map(num => (
                                 <button
                                     key={num}
                                     onClick={() => setQuestionCount(num)}
-                                    className={`flex-1 py-2 rounded-lg border-2 font-bold transition-all ${questionCount === num
-                                            ? "border-primary bg-primary text-primary-foreground scale-105 shadow-lg"
-                                            : "border-border bg-background text-muted-foreground hover:border-primary/50"
+                                    className={`flex-1 py-3 rounded-xl border font-bold transition-all duration-300 ${questionCount === num
+                                        ? "border-cyan-400 bg-cyan-500/20 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.3)] shadow-cyan-400/20"
+                                        : "border-slate-800 bg-slate-950/50 text-slate-500 hover:border-cyan-500/30 hover:text-cyan-200"
                                         }`}
                                 >
                                     {num}
@@ -68,23 +78,22 @@ export function AITrainingSetup() {
                         </div>
                     </div>
 
-                    <div className="pt-6 border-t border-border flex flex-col gap-3">
-                        <PixelButton
-                            variant="success"
+                    <div className="pt-8 mt-4 flex flex-col gap-4">
+                        <button
                             onClick={handleStartTraining}
                             disabled={!topic.trim()}
-                            className="w-full py-4 text-xl animate-pulse-glow"
+                            className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-lg shadow-lg shadow-cyan-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
                         >
-                            Start Training Session
-                        </PixelButton>
+                            <span className="relative z-10">Initialize Sequence</span>
+                            <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                        </button>
 
-                        <PixelButton
-                            variant="secondary"
+                        <button
                             onClick={() => setCurrentPage("home")}
-                            className="w-full"
+                            className="w-full py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
                         >
-                            Back to Base
-                        </PixelButton>
+                            Abort Process
+                        </button>
                     </div>
                 </div>
             </motion.div>

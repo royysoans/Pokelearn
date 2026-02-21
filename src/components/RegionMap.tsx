@@ -9,17 +9,8 @@ export function RegionMap() {
 
 
     const getRegionColor = (regionName: string) => {
-        const colors: Record<string, string> = {
-            Kanto: "fire",
-            Johto: "ground",
-            Hoenn: "electric",
-            Sinnoh: "grass",
-            Unova: "water",
-            Kalos: "fairy",
-            Alola: "ice",
-            Galar: "dark",
-        };
-        return colors[regionName] || "normal";
+        // Uniform color for regions instead of individual border colors
+        return "primary";
     };
 
     const handleSelectRegion = (region: typeof regions[0], index: number) => {
@@ -46,8 +37,7 @@ export function RegionMap() {
                             <div
                                 key={region.name}
                                 onClick={() => handleSelectRegion(region, index)}
-                                className={`relative border-4 rounded-lg overflow-hidden ${isUnlocked ? `cursor-pointer hover:scale-105 border-${getRegionColor(region.name)}` : "cursor-not-allowed opacity-50 border-border"
-                                    } transition-transform`}
+                                className={`relative rounded-lg overflow-hidden ${isUnlocked ? 'cursor-pointer hover:scale-105 shadow-lg shadow-primary/20 hover:shadow-primary/50' : 'cursor-not-allowed opacity-50'} transition-all`}
                                 style={{
                                     backgroundImage: isUnlocked
                                         ? `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${region.background})`
@@ -81,7 +71,13 @@ export function RegionMap() {
                     })}
                 </div>
 
-                <div className="text-center space-x-4 flex flex-wrap justify-center gap-y-2">
+                <div className="text-center space-x-4 flex flex-wrap justify-center gap-y-4 mt-8">
+                    <PixelButton onClick={() => setCurrentPage("mastery")} variant="success">
+                        Learning Dashboard
+                    </PixelButton>
+                    <PixelButton onClick={() => setCurrentPage("ai-training" as any)} variant="primary">
+                        AI Training Center
+                    </PixelButton>
 
                     <PixelButton onClick={() => setCurrentPage("pokedex")}>
                         View Pokédex
