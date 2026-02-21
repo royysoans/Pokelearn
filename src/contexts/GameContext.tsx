@@ -62,7 +62,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     if (path === "home" || path === "") {
       setCurrentPageState("home");
-    } else if (["login", "signup", "starter", "regions", "gyms", "battle", "pokedex", "badges", "leaderboard"].includes(path)) {
+    } else if (["login", "signup", "starter", "regions", "gyms", "battle", "pokedex", "badges", "leaderboard", "mastery", "ai-training", "ai-battle"].includes(path)) {
       setCurrentPageState(path as GamePage);
     }
   }, [location]);

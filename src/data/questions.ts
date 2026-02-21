@@ -5,25 +5,25 @@ import { invokeFunction } from "../lib/supabaseClient.ts";
 // Fallback question bank
 const questionBank: Record<string, Question[]> = {
   math: [
-    { q: "2 + 2?", a: ["3", "4", "5"], c: "4" },
-    { q: "5 * 3?", a: ["15", "10", "20"], c: "15" },
-    { q: "10 - 7?", a: ["2", "3", "4"], c: "3" },
-    { q: "100 / 4?", a: ["20", "30", "25"], c: "25" },
-    { q: "Square root of 9?", a: ["3", "9", "81"], c: "3" },
+    { q: "2 + 2?", a: ["3", "4", "5"], c: "4", e: "If you have 2 items and add 2 more, you get 4." },
+    { q: "5 * 3?", a: ["15", "10", "20"], c: "15", e: "5 multiplied by 3 is 15." },
+    { q: "10 - 7?", a: ["2", "3", "4"], c: "3", e: "Taking 7 away from 10 leaves 3." },
+    { q: "100 / 4?", a: ["20", "30", "25"], c: "25", e: "100 divided into 4 equal parts is 25." },
+    { q: "Square root of 9?", a: ["3", "9", "81"], c: "3", e: "3 multiplied by itself is 9." },
   ],
   science: [
-    { q: "Water formula?", a: ["H2O", "O2", "CO2"], c: "H2O" },
-    { q: "The red planet?", a: ["Mars", "Jupiter", "Venus"], c: "Mars" },
-    { q: "Largest mammal?", a: ["Elephant", "Blue Whale", "Giraffe"], c: "Blue Whale" },
-    { q: "Planet closest to sun?", a: ["Venus", "Earth", "Mercury"], c: "Mercury" },
-    { q: "Symbol for Gold?", a: ["Ag", "Au", "Go"], c: "Au" },
+    { q: "Water formula?", a: ["H2O", "O2", "CO2"], c: "H2O", e: "Water is composed of 2 Hydrogen atoms and 1 Oxygen atom." },
+    { q: "The red planet?", a: ["Mars", "Jupiter", "Venus"], c: "Mars", e: "Mars is known as the red planet due to its iron oxide surface layer." },
+    { q: "Largest mammal?", a: ["Elephant", "Blue Whale", "Giraffe"], c: "Blue Whale", e: "The Blue Whale is the largest known mammal to have ever lived." },
+    { q: "Planet closest to sun?", a: ["Venus", "Earth", "Mercury"], c: "Mercury", e: "Mercury is the innermost planet in our solar system." },
+    { q: "Symbol for Gold?", a: ["Ag", "Au", "Go"], c: "Au", e: "Au comes from the Latin word for gold, 'aurum'." },
   ],
   coding: [
-    { q: "HTML tag for paragraph?", a: ["<p>", "<div>", "<span>"], c: "<p>" },
-    { q: "JS declare var?", a: ["var", "let", "const"], c: "let" },
-    { q: "CSS stands for?", a: ["Cascading Style Sheets", "Creative Style System", "Computer Style Syntax"], c: "Cascading Style Sheets" },
-    { q: "Loop keyword?", a: ["repeat", "while", "loop"], c: "while" },
-    { q: "What does 'git clone' do?", a: ["Delete repo", "Copy repo", "Create repo"], c: "Copy repo" },
+    { q: "HTML tag for paragraph?", a: ["<p>", "<div>", "<span>"], c: "<p>", e: "The <p> tag defines a paragraph." },
+    { q: "JS declare var?", a: ["var", "let", "const"], c: "let", e: "'let' allows you to declare block-scoped local variables." },
+    { q: "CSS stands for?", a: ["Cascading Style Sheets", "Creative Style System", "Computer Style Syntax"], c: "Cascading Style Sheets", e: "CSS describes how HTML elements are to be displayed." },
+    { q: "Loop keyword?", a: ["repeat", "while", "loop"], c: "while", e: "The 'while' loop executes a block of code as long as a specified condition is true." },
+    { q: "What does 'git clone' do?", a: ["Delete repo", "Copy repo", "Create repo"], c: "Copy repo", e: "'git clone' is used to copy an existing repository." },
   ],
 };
 
@@ -132,7 +132,10 @@ export async function generateQuestions(
   } catch (err) {
     console.error("AI generation failed, using fallback:", err);
     // Return fallback questions, repeating if necessary to reach count
-    const base = questionBank[subject] || questionBank.math;
+    const base = questionBank[subject] || [
+      { q: `What is the most important concept in ${subject}?`, a: ["Understanding", "Practice", "Patience"], c: "Understanding", e: `The core of ${subject} relies on understanding the fundamentals.` },
+      { q: `Which of these is related to ${subject}?`, a: ["Everything", "Nothing", "Something"], c: "Everything", e: `Many concepts tie back to ${subject}.` }
+    ];
     return Array.from({ length: count }, (_, i) => ({ ...base[i % base.length] }));
   }
 }
@@ -144,7 +147,10 @@ export async function fetchQuizQuestions(subject: string, count: number): Promis
     return questions;
   } catch (err) {
     console.error("Failed to fetch AI questions, using fallback:", err);
-    const base = questionBank[subject] || questionBank.math;
+    const base = questionBank[subject] || [
+      { q: `What is the most important concept in ${subject}?`, a: ["Understanding", "Practice", "Patience"], c: "Understanding", e: `The core of ${subject} relies on understanding the fundamentals.` },
+      { q: `Which of these is related to ${subject}?`, a: ["Everything", "Nothing", "Something"], c: "Everything", e: `Many concepts tie back to ${subject}.` }
+    ];
     return Array.from({ length: count }, (_, i) => ({ ...base[i % base.length] }));
   }
 }

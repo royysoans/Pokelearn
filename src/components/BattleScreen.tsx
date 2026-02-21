@@ -10,6 +10,7 @@ import { ShareButtons } from "./ShareButtons";
 import { useToast } from "@/hooks/use-toast";
 import { useSound } from "@/hooks/use-sound";
 import { QuizSettings } from "./QuizSettings";
+import { DownloadQuizButton } from "./DownloadQuizButton";
 
 interface BattleScreenProps {
   gym: string;
@@ -87,7 +88,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
       selectedPokemon = [pokemonDB[pokemonId]];
 
       // Determine subject from gym name
-      const subject = gym.includes("Maths") ? "math"
+      let subject = gym.includes("Maths") ? "math"
         : gym.includes("Science") ? "science"
           : "coding";
 
@@ -374,6 +375,17 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
             })}
           </div>
 
+          {isAnswered && currentQuestion.e && (
+            <div className="mt-4 p-4 border-2 border-primary rounded bg-card/80 text-left mb-4">
+              <h4 className="text-primary font-bold mb-2 flex items-center">
+                <span className="text-xl mr-2">👨‍🔬</span> Professor's Note
+              </h4>
+              <p className="text-sm sm:text-base text-foreground">
+                {currentQuestion.e}
+              </p>
+            </div>
+          )}
+
           {showNextButton && (
             <div className="mt-4">
               <PixelButton variant="primary" onClick={handleNext}>
@@ -386,6 +398,15 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
         {showShareButtons && (
           <div className="mb-4">
             <ShareButtons message={shareMessage} />
+          </div>
+        )}
+
+        {battleEnded && (
+          <div className="mb-6">
+            <DownloadQuizButton
+              questions={questions}
+              topic={gym.includes("Maths") ? "Math" : gym.includes("Science") ? "Science" : "Coding"}
+            />
           </div>
         )}
 

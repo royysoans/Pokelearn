@@ -22,13 +22,10 @@ export async function invokeFunction(
   name: string,
   body: GenerateQuizRequest
 ): Promise<GenerateQuizResponse> {
-  // const isDev = import.meta.env.DEV;
-  // const url = isDev
-  //   ? `http://localhost:54321/functions/v1/${name}`
-  //   : `${supabaseUrl}/functions/v1/${name}`;
-
-  // Always use production URL since we are deploying functions to Supabase
-  const url = `${supabaseUrl}/functions/v1/${name}`;
+  const isDev = import.meta.env.DEV;
+  const url = isDev
+    ? `http://127.0.0.1:54321/functions/v1/${name}`
+    : `${supabaseUrl}/functions/v1/${name}`;
 
   const session = await supabase.auth.getSession();
   const access_token = session.data.session?.access_token;

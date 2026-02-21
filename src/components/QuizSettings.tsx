@@ -70,8 +70,8 @@ export function QuizSettings({
                                             key={size}
                                             onClick={() => onFontSizeChange(size)}
                                             className={`px-3 py-2 rounded-lg border-2 transition-all ${fontSize === size
-                                                    ? "bg-primary text-primary-foreground border-primary"
-                                                    : "bg-background border-border hover:border-primary/50"
+                                                ? "bg-primary text-primary-foreground border-primary"
+                                                : "bg-background border-border hover:border-primary/50"
                                                 }`}
                                         >
                                             {fontSizeLabels[size]}
@@ -90,8 +90,8 @@ export function QuizSettings({
                                     <button
                                         onClick={() => onFontFamilyChange("normal")}
                                         className={`px-3 py-2 rounded-lg border-2 transition-all ${fontFamily === "normal"
-                                                ? "bg-primary text-primary-foreground border-primary"
-                                                : "bg-background border-border hover:border-primary/50"
+                                            ? "bg-primary text-primary-foreground border-primary"
+                                            : "bg-background border-border hover:border-primary/50"
                                             }`}
                                     >
                                         Normal
@@ -99,17 +99,18 @@ export function QuizSettings({
                                     <button
                                         onClick={() => onFontFamilyChange("noto")}
                                         className={`px-3 py-2 rounded-lg border-2 transition-all font-noto ${fontFamily === "noto"
-                                                ? "bg-primary text-primary-foreground border-primary"
-                                                : "bg-background border-border hover:border-primary/50"
+                                            ? "bg-primary text-primary-foreground border-primary"
+                                            : "bg-background border-border hover:border-primary/50"
                                             }`}
                                     >
                                         OpenDyslexic
                                     </button>
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-2">
+                                <p className="text-xs text-muted-foreground mt-2 mb-4">
                                     OpenDyslexic font is designed for better readability
                                 </p>
                             </div>
+
                         </motion.div>
                     </>
                 )}

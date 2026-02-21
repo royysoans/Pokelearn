@@ -8,6 +8,7 @@ interface Question {
   q: string;
   a: string[];
   c: string;
+  e: string;
 }
 
 interface QuizRequestBody {
@@ -138,7 +139,7 @@ ${flavor}
 Respond ONLY with valid JSON:
 {
   "questions": [
-    { "q": "Question text", "a": ["Option 1", "Option 2", "Option 3"], "c": "Correct Option" }
+    { "q": "Question text", "a": ["Option 1", "Option 2", "Option 3"], "c": "Correct Option", "e": "Brief educational explanation of why this is correct" }
   ]
 }`;
 
@@ -174,9 +175,9 @@ Respond ONLY with valid JSON:
     } catch (err) {
       console.warn("⚠️ Failed to parse Gemini output, falling back to default:", err);
       parsedQuestions = [
-        { q: "What is 2 + 2?", a: ["3", "4", "5"], c: "4" },
-        { q: "Which Pokémon type is strong against Water?", a: ["Fire", "Electric", "Rock"], c: "Electric" },
-        { q: "What color is Pikachu?", a: ["Red", "Yellow", "Blue"], c: "Yellow" },
+        { q: "What is 2 + 2?", a: ["3", "4", "5"], c: "4", e: "2 + 2 equals 4. If you have two apples and get two more, you have four apples." },
+        { q: "Which Pokémon type is strong against Water?", a: ["Fire", "Electric", "Rock"], c: "Electric", e: "Electric-type moves are super effective against Water-type Pokémon because water conducts electricity." },
+        { q: "What color is Pikachu?", a: ["Red", "Yellow", "Blue"], c: "Yellow", e: "Pikachu is the iconic yellow electric mouse Pokémon." },
       ];
     }
 

@@ -22,6 +22,7 @@ export interface Question {
   q: string;
   a: string[];
   c: string;
+  e?: string;
 }
 
 export interface GameState {
@@ -37,4 +38,4 @@ export interface GameState {
   buddyPokemonId: number | null;
 }
 
-export type GamePage = 'home' | 'login' | 'signup' | 'starter' | 'regions' | 'gyms' | 'battle' | 'pokedex' | 'badges' | 'leaderboard';
+export type GamePage = 'home' | 'login' | 'signup' | 'starter' | 'regions' | 'gyms' | 'battle' | 'pokedex' | 'badges' | 'leaderboard' | 'mastery' | 'ai-training' | 'ai-battle';
