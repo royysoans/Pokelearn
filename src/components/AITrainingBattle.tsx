@@ -274,7 +274,7 @@ export function AITrainingBattle() {
                         </div>
 
                         <div className="flex flex-col sm:flex-row gap-4">
-                            <button onClick={() => setCurrentPage("ai-training" as any)} className="flex-1 py-4 rounded-xl border border-cyan-700 bg-cyan-900/30 hover:bg-cyan-800/50 text-cyan-300 font-semibold transition-colors">
+                            <button onClick={() => setCurrentPage("ai-training")} className="flex-1 py-4 rounded-xl border border-cyan-700 bg-cyan-900/30 hover:bg-cyan-800/50 text-cyan-300 font-semibold transition-colors">
                                 New Search
                             </button>
                             <button onClick={() => setCurrentPage("home")} className="flex-1 py-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-semibold transition-colors">

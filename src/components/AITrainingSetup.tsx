@@ -16,7 +16,7 @@ export function AITrainingSetup() {
         localStorage.setItem("aiTrainingCount", questionCount.toString());
 
         // Navigate to the AI Training Battle screen
-        setCurrentPage("ai-battle" as any); // We will add this route
+        setCurrentPage("ai-battle"); // We will add this route
     };
 
     return (

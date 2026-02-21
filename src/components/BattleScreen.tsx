@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { useGame } from "@/contexts/GameContext";
 import { pokemonDB } from "@/data/pokemon";
 import { arenaPokemonMap } from "@/data/arenaPokemon";
@@ -253,17 +252,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
     }
   };
 
-  const createConfetti = () => {
-    for (let i = 0; i < 30; i++) {
-      const confetti = document.createElement("div");
-      confetti.className = "fixed w-3 h-3 animate-confetti-fall";
-      confetti.style.left = Math.random() * window.innerWidth + "px";
-      confetti.style.top = "-20px";
-      confetti.style.backgroundColor = ["#facc15", "#22c55e", "#3b82f6", "#f472b6"][Math.floor(Math.random() * 4)];
-      document.body.appendChild(confetti);
-      setTimeout(() => confetti.remove(), 3000);
-    }
-  };
+
 
   if (!currentOpponent) {
     return (

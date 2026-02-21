@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { PixelButton } from "./PixelButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -44,18 +44,29 @@ export function Signup({ onSwitchToLogin, onSignupSuccess }: SignupProps) {
     setLoading(false);
   };
 
+  // Stabilize random orb values across re-renders to prevent CSS animation jumps
+  const orbs = useMemo(() => {
+    return [...Array(8)].map((_, i) => ({
+      key: `orb - ${i} `,
+      index: i,
+      delay: i * 2,
+      duration: 20 + Math.random() * 10,
+      size: 100 + Math.random() * 150
+    }));
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-[url('/grid-pattern.png')] bg-fixed relative overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-slate-950 font-pixel relative overflow-hidden">
       {/* Animated Background Elements (Updated) */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {/* Floating Gradient Orbs */}
-        {[...Array(8)].map((_, i) => (
+        {orbs.map(orb => (
           <FloatingOrb
-            key={`orb-${i}`}
-            index={i}
-            delay={i * 2}
-            duration={20 + Math.random() * 10}
-            size={100 + Math.random() * 150}
+            key={orb.key}
+            index={orb.index}
+            delay={orb.delay}
+            duration={orb.duration}
+            size={orb.size}
           />
         ))}
         {/* Interactive Orb */}

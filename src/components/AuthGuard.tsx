@@ -1,17 +1,14 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Login } from "./Login";
-import { Signup } from "./Signup";
-import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { isSupabaseConfigured } from "@/integrations/supabase/client";
 
 interface AuthGuardProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const { user, loading } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
 
   if (!isSupabaseConfigured) {
     return (
@@ -26,7 +23,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
             <p>2. Get your project URL and anon key</p>
             <p>3. Create a <code>.env.local</code> file in the project root with:</p>
             <pre className="mt-2">
-              VITE_SUPABASE_URL=your_project_url<br/>
+              VITE_SUPABASE_URL=your_project_url<br />
               VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_key
             </pre>
             <p>4. Run <code>supabase db reset</code> to apply migrations</p>
@@ -48,17 +45,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          {isLogin ? (
-            <Login onSwitchToSignup={() => setIsLogin(false)} />
-          ) : (
-            <Signup onSwitchToLogin={() => setIsLogin(true)} />
-          )}
-        </div>
-      </div>
-    );
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;

@@ -38,4 +38,4 @@ export interface GameState {
   buddyPokemonId: number | null;
 }
 
-export type GamePage = 'home' | 'login' | 'signup' | 'starter' | 'regions' | 'gyms' | 'battle' | 'pokedex' | 'badges' | 'leaderboard' | 'mastery' | 'ai-training' | 'ai-battle';
+export type GamePage = 'home' | 'login' | 'signup' | 'starter' | 'regions' | 'gyms' | 'battle' | 'pokedex' | 'badges' | 'leaderboard' | 'mastery' | 'ai-training' | 'ai-battle' | 'multiplayer';

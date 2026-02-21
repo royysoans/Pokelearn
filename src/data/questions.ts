@@ -1,6 +1,6 @@
 // src/lib/questions.ts
 import type { Question } from "../types/game.ts";
-import { invokeFunction } from "../lib/supabaseClient.ts";
+import { invokeFunction } from "@/integrations/supabase/client";
 
 // Fallback question bank
 const questionBank: Record<string, Question[]> = {

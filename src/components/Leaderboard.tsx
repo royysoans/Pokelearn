@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { PixelButton } from "./PixelButton";
 import { ShareButtons } from "./ShareButtons";
-import { motion, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Medal, Crown, ArrowLeft, Star, TrendingUp, TrendingDown, Minus, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";

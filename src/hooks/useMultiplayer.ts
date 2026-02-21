@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { generateQuestions } from '@/data/questions';
 
 export interface Player {
@@ -72,7 +72,7 @@ export const useMultiplayer = () => {
     };
 
     const subscribeToBattle = (battleId: string) => {
-        supabase
+        const channel = supabase
             .channel(`battle:${battleId}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'battles', filter: `id=eq.${battleId}` },
                 (payload) => {
@@ -95,8 +95,10 @@ export const useMultiplayer = () => {
                             winner: battle.winner_id,
                         };
                     });
-                })
-            .subscribe();
+                });
+
+        activeChannelsRef.current.push(channel);
+        channel.subscribe();
     };
 
     const submitAnswer = async (isCorrect: boolean) => {
@@ -151,10 +153,20 @@ export const useMultiplayer = () => {
 
     const [userId, setUserId] = useState<string | null>(null);
     const gameStateRef = useRef(gameState);
+    const activeChannelsRef = useRef<any[]>([]);
 
     useEffect(() => {
         gameStateRef.current = gameState;
     }, [gameState]);
+
+    // Cleanup subscriptions on unmount
+    useEffect(() => {
+        return () => {
+            activeChannelsRef.current.forEach(channel => {
+                supabase.removeChannel(channel);
+            });
+        };
+    }, []);
 
     useEffect(() => {
         const getUserId = async () => {
@@ -228,7 +240,7 @@ export const useMultiplayer = () => {
     };
 
     const subscribeToLobby = (lobbyId: string) => {
-        supabase
+        const lobbyChannel = supabase
             .channel(`lobby:${lobbyId}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'lobbies', filter: `id=eq.${lobbyId}` },
                 async (payload) => {
@@ -275,20 +287,21 @@ export const useMultiplayer = () => {
                             }
                         }
                     }
-                })
-            .subscribe();
+                });
+        activeChannelsRef.current.push(lobbyChannel);
+        lobbyChannel.subscribe();
 
         // Also listen for battle creation if not host
-        supabase
+        const battleChannel = supabase
             .channel(`battles:lobby:${lobbyId}`)
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'battles', filter: `lobby_id=eq.${lobbyId}` },
                 (payload) => {
                     // If I am NOT host, I should join this battle
                     if (!gameStateRef.current.isHost) {
-                        enterBattle(payload.new);
                     }
-                })
-            .subscribe();
+                });
+        activeChannelsRef.current.push(battleChannel);
+        battleChannel.subscribe();
     };
 
     return {

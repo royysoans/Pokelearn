@@ -7,6 +7,7 @@ import { useAudioBgm } from "@/hooks/use-audio-bgm";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Volume2, VolumeX } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { GameProvider, useGame } from "@/contexts/GameContext";
@@ -63,8 +64,6 @@ const BattleScreenWrapper = () => {
 
   return <BattleScreen gym={state.gym} level={state.level} />;
 };
-
-import { AnimatePresence, motion } from "framer-motion";
 
 const PageTransition = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -135,9 +134,9 @@ const App = () => {
           <BrowserRouter>
             <AuthProvider>
               <GameProvider>
-                <AnimatedRoutes />
                 <ErrorBoundary>
                   <BuddyDisplay />
+                  <AnimatedRoutes />
                 </ErrorBoundary>
               </GameProvider>
             </AuthProvider>

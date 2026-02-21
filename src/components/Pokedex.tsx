@@ -1,6 +1,5 @@
 import { useGame } from "@/contexts/GameContext";
 import { PixelButton } from "./PixelButton";
-import { ShareButtons } from "./ShareButtons";
 import { FloatingOrb } from "./FloatingOrb";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";

@@ -124,7 +124,7 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
           <h2 className="text-xl sm:text-2xl md:text-4xl mb-4 text-primary text-shadow-pixel">
             {region.symbol} {selectedArena}
           </h2>
-          <p className="text-sm sm:text-base text-muted-foreground mb-8">Select Level (10 questions each, all correct to pass)</p>
+          <p className="text-sm sm:text-base text-muted-foreground mb-8">Select Level (10 questions each, 8 correct to pass)</p>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 mb-8">
             {Array.from({ length: 10 }, (_, i) => i + 1).map((level) => {
@@ -204,8 +204,8 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
           <div
             onClick={handleLeaderChallenge}
             className={`border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform ${region && areAllSubjectLevelsCompleted(region.name)
-                ? "bg-secondary/90 border-dragon"
-                : "bg-gray-500/50 opacity-50 cursor-not-allowed border-border"
+              ? "bg-secondary/90 border-dragon"
+              : "bg-gray-500/50 opacity-50 cursor-not-allowed border-border"
               }`}
           >
             <h3 className="text-xl sm:text-2xl md:text-3xl mb-2 text-secondary-foreground text-center">👑</h3>

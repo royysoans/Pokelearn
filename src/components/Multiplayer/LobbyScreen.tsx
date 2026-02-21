@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PixelButton } from '@/components/PixelButton';
 import { Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LobbyScreenProps {
     lobbyId: string;

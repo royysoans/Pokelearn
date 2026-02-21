@@ -15,6 +15,7 @@ vi.mock('@/integrations/supabase/client', () => ({
       single: vi.fn().mockResolvedValue({ data: null, error: null }),
     }),
   },
+  isSupabaseConfigured: true,
 }));
 
 // Mock useAudioBgm

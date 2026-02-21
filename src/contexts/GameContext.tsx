@@ -79,8 +79,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const loadGameState = useCallback(async () => {
     if (!user) return;
 
-    if (!user) return;
-
     try {
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -516,10 +514,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
 
     // Optimistic update
-    setGameState(prev => ({
-      ...prev,
-      pokemon: [...prev.pokemon.filter(p => p.id !== pokemonId), evolvedForm]
-    }));
+    setGameState(prev => {
+      const isBuddy = prev.buddyPokemonId === pokemonId;
+      return {
+        ...prev,
+        pokemon: [...prev.pokemon.filter(p => p.id !== pokemonId), evolvedForm],
+        ...(isBuddy ? { buddyPokemonId: evolvedForm.id } : {})
+      };
+    });
 
     toast({
       title: "Evolution Successful!",
