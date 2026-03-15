@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useSound } from "@/hooks/use-sound";
 import { QuizSettings } from "./QuizSettings";
 import { DownloadQuizButton } from "./DownloadQuizButton";
+import { Badge3D } from "./Badge3D";
+import { CatchingMiniGame } from "./CatchingMiniGame";
 
 interface BattleScreenProps {
   gym: string;
@@ -32,6 +34,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   const [showShareButtons, setShowShareButtons] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
   const [battleEnded, setBattleEnded] = useState(false);
+  const [battlePhase, setBattlePhase] = useState<"battle" | "catch" | "victory" | "fled">("battle");
   const [buttonText, setButtonText] = useState("Flee Battle");
   const [quizFontSize, setQuizFontSize] = useState<"sm" | "base" | "lg" | "xl">(() =>
     (localStorage.getItem("quizFontSize") as "sm" | "base" | "lg" | "xl") || "base"
@@ -151,98 +154,9 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   const handleBattleEnd = async () => {
     setBattleEnded(true);
     if (correctAnswersRef.current >= requiredCorrect) {
-      addPokemon(currentOpponent);
-      playVictory();
-
-
-
-      // Canvas confetti effect (replaces DOM nodes)
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        canvas.style.position = "fixed";
-        canvas.style.left = "0";
-        canvas.style.top = "0";
-        canvas.style.pointerEvents = "none";
-        canvas.style.zIndex = "9999";
-        document.body.appendChild(canvas);
-        const ctx = canvas.getContext("2d");
-        const pieces = Array.from({ length: 160 }).map(() => ({
-          x: Math.random() * canvas.width,
-          y: -20 - Math.random() * 200,
-          r: 4 + Math.random() * 6,
-          c: ["#facc15", "#22c55e", "#3b82f6", "#f472b6"][Math.floor(Math.random() * 4)],
-          vx: -2 + Math.random() * 4,
-          vy: 2 + Math.random() * 3,
-          a: Math.random() * Math.PI * 2,
-          va: -0.2 + Math.random() * 0.4,
-        }));
-        let frame = 0;
-        const loop = () => {
-          if (!ctx) return;
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          pieces.forEach(p => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.a += p.va;
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.rotate(p.a);
-            ctx.fillStyle = p.c;
-            ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
-            ctx.restore();
-          });
-          frame++;
-          if (frame < 240) requestAnimationFrame(loop); else canvas.remove();
-        };
-        requestAnimationFrame(loop);
-      } catch { }
-
-      // Award badge if Gym Leader was defeated
-      if (level === "leader" && gameState.currentRegion) {
-        const badgeId = `${gameState.currentRegion.name.toLowerCase()}-leader`;
-        addBadge(badgeId);
-        toast({
-          title: `🏆 You defeated the ${gameState.currentRegion.name} Gym Leader!`,
-          description: `You caught ${currentOpponent.name} and earned a badge!`,
-        });
-        setShowShareButtons(true);
-        setShareMessage(`I just defeated ${currentOpponent.name} in the ${gameState.currentRegion.name} region! Can you beat me?`);
-        setButtonText("Exit Battle");
-      } else if (typeof level === "number" && gameState.currentRegion) {
-        // Add completed level
-        const subject = gym.includes("Maths") ? "math" : gym.includes("Science") ? "science" : "coding";
-        addCompletedLevel(gameState.currentRegion.name, subject, level);
-        toast({
-          title: `You completed Level ${level} in ${gym}!`,
-          description: `You caught ${currentOpponent.name}!`,
-        });
-        setButtonText("Exit Battle");
-      } else {
-        toast({
-          title: `You caught ${currentOpponent.name}!`,
-          description: currentOpponent.desc,
-        });
-        setButtonText("Exit Battle");
-      }
-
-      // Force immediate save to persist caught Pokemon and badges
-      saveNow();
-
-      const remainingPokemon = battlePokemon.slice(1);
-      if (remainingPokemon.length > 0) {
-        setBattlePokemon(remainingPokemon);
-        setCurrentQuestionIndex(0);
-        setCorrectAnswers(0);
-        correctAnswersRef.current = 0;
-        setSelectedAnswer(null);
-        setIsAnswered(false);
-        setBattleEnded(false);
-      } else {
-        // User must click Exit Battle manually
-      }
+      setBattlePhase("catch");
     } else {
+      setBattlePhase("fled");
       toast({
         title: "Not enough correct answers!",
         description: `You need ${requiredCorrect} correct to win.`,
@@ -250,6 +164,110 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
       });
       setButtonText("Exit Battle");
     }
+  };
+
+  const handleCatchSuccess = () => {
+    setBattlePhase("victory");
+    addPokemon(currentOpponent);
+    playVictory();
+
+    // Canvas confetti effect (replaces DOM nodes)
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      canvas.style.position = "fixed";
+      canvas.style.left = "0";
+      canvas.style.top = "0";
+      canvas.style.pointerEvents = "none";
+      canvas.style.zIndex = "9999";
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext("2d");
+      const pieces = Array.from({ length: 160 }).map(() => ({
+        x: Math.random() * canvas.width,
+        y: -20 - Math.random() * 200,
+        r: 4 + Math.random() * 6,
+        c: ["#facc15", "#22c55e", "#3b82f6", "#f472b6"][Math.floor(Math.random() * 4)],
+        vx: -2 + Math.random() * 4,
+        vy: 2 + Math.random() * 3,
+        a: Math.random() * Math.PI * 2,
+        va: -0.2 + Math.random() * 0.4,
+      }));
+      let frame = 0;
+      const loop = () => {
+        if (!ctx) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.a += p.va;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.a);
+          ctx.fillStyle = p.c;
+          ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
+          ctx.restore();
+        });
+        frame++;
+        if (frame < 240) requestAnimationFrame(loop); else canvas.remove();
+      };
+      requestAnimationFrame(loop);
+    } catch { }
+
+    // Award badge if Gym Leader was defeated
+    if (level === "leader" && gameState.currentRegion) {
+      const badgeId = `${gameState.currentRegion.name.toLowerCase()}-leader`;
+      addBadge(badgeId);
+      toast({
+        title: `🏆 You defeated the ${gameState.currentRegion.name} Gym Leader!`,
+        description: `You caught ${currentOpponent.name} and earned a badge!`,
+      });
+      setShowShareButtons(true);
+      setShareMessage(`I just defeated ${currentOpponent.name} in the ${gameState.currentRegion.name} region! Can you beat me?`);
+      setButtonText("Exit Battle");
+    } else if (typeof level === "number" && gameState.currentRegion) {
+      // Add completed level
+      const subject = gym.includes("Maths") ? "math" : gym.includes("Science") ? "science" : "coding";
+      addCompletedLevel(gameState.currentRegion.name, subject, level);
+      toast({
+        title: `You completed Level ${level} in ${gym}!`,
+        description: `You caught ${currentOpponent.name}!`,
+      });
+      setButtonText("Exit Battle");
+    } else {
+      toast({
+        title: `You caught ${currentOpponent.name}!`,
+        description: currentOpponent.desc,
+      });
+      setButtonText("Exit Battle");
+    }
+
+    // Force immediate save to persist caught Pokemon and badges
+    saveNow();
+
+    const remainingPokemon = battlePokemon.slice(1);
+    if (remainingPokemon.length > 0) {
+      setBattlePokemon(remainingPokemon);
+      setCurrentQuestionIndex(0);
+      setCorrectAnswers(0);
+      correctAnswersRef.current = 0;
+      setSelectedAnswer(null);
+      setIsAnswered(false);
+      setBattleEnded(false);
+      setBattlePhase("battle");
+    } else {
+      // User must click Exit Battle manually
+    }
+  };
+
+  const handleCatchFail = () => {
+    setBattlePhase("fled");
+    toast({
+      title: `${currentOpponent.name} broke free!`,
+      description: "It fled the battle!",
+      variant: "destructive"
+    });
+    setButtonText("Exit Battle");
   };
 
 
@@ -329,13 +347,14 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
             <img
               src={currentOpponent.image}
               alt={currentOpponent.name}
-              className="pixelated h-24 sm:h-32 md:h-40 animate-bounce-slow"
+              className={`pixelated h-24 sm:h-32 md:h-40 animate-bounce-slow ${battlePhase === "fled" ? "opacity-0 transition-opacity duration-1000" : ""}`}
             />
           </div>
         </div>
 
-        <div className={`bg-card border-4 border-border rounded p-4 sm:p-6 mb-6 ${quizFontFamily === "noto" ? "font-noto" : ""}`}>
-          <p className={`mb-6 ${quizFontSize === "sm" ? "text-xs sm:text-sm" :
+        {battlePhase === "battle" && (
+          <div className={`bg-card border-4 border-border rounded p-4 sm:p-6 mb-6 ${quizFontFamily === "noto" ? "font-noto" : ""}`}>
+            <p className={`mb-6 ${quizFontSize === "sm" ? "text-xs sm:text-sm" :
             quizFontSize === "base" ? "text-sm sm:text-base md:text-xl" :
               quizFontSize === "lg" ? "text-base sm:text-lg md:text-2xl" :
                 "text-lg sm:text-xl md:text-3xl"
@@ -387,7 +406,7 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
             </div>
           )}
 
-          {showNextButton && (
+          {battlePhase === "battle" && showNextButton && (
             <div className="mt-4">
               <PixelButton variant="primary" onClick={handleNext}>
                 Next Question
@@ -395,10 +414,32 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
             </div>
           )}
         </div>
+        )}
+
+        {battlePhase === "catch" && (
+          <CatchingMiniGame 
+              pokemon={currentOpponent} 
+              region={gameState.currentRegion?.name || ""}
+              gym={gym}
+              subject={gym.includes("Maths") ? "math" : gym.includes("Science") ? "science" : "coding"}
+              level={level}
+              onCatchSuccess={handleCatchSuccess}
+              onCatchFail={handleCatchFail}
+          />
+        )}
 
         {showShareButtons && (
           <div className="mb-4">
             <ShareButtons message={shareMessage} />
+          </div>
+        )}
+
+        {battleEnded && level === "leader" && (
+          <div className="my-8 animate-in fade-in zoom-in duration-500">
+            <h3 className="text-2xl text-primary font-bold mb-4 text-shadow-pixel animate-pulse">Badge Earned!</h3>
+            <div className="h-[300px] w-full">
+              <Badge3D color="#facc15" />
+            </div>
           </div>
         )}
 

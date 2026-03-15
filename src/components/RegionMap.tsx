@@ -80,7 +80,10 @@ export function RegionMap() {
                     </PixelButton>
 
                     <PixelButton onClick={() => setCurrentPage("pokedex")}>
-                        View Pokédex
+                        Pokédex
+                    </PixelButton>
+                    <PixelButton onClick={() => setCurrentPage("badges")} variant="electric">
+                        Badges & Trophies
                     </PixelButton>
                     <PixelButton onClick={() => setCurrentPage("leaderboard")}>
                         Leaderboard

@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toPng } from 'html-to-image';
 import download from 'downloadjs';
-
 export const ProfileCustomization = () => {
     const { gameState, updateProfile } = useGame();
     const [isOpen, setIsOpen] = useState(false);
@@ -191,6 +190,8 @@ export const ProfileCustomization = () => {
                                 />
                                 <p className="text-xs text-right text-muted-foreground">{bio.length}/140</p>
                             </div>
+
+
 
                             <div className="space-y-2">
                                 <Label>Card Theme</Label>

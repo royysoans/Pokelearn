@@ -65,9 +65,14 @@ export function MasteryDashboard() {
                         <span className="text-3xl lg:text-4xl mr-3 animate-bounce-slow">🎓</span>
                         Mastery Hub
                     </h2>
-                    <PixelButton onClick={() => setCurrentPage("home")} variant="secondary">
-                        Back to Home
-                    </PixelButton>
+                    <div className="flex gap-4">
+                        <PixelButton onClick={() => setCurrentPage("badges")} variant="electric">
+                            Trophy Case
+                        </PixelButton>
+                        <PixelButton onClick={() => setCurrentPage("home")} variant="secondary">
+                            Back to Home
+                        </PixelButton>
+                    </div>
                 </div>
 
                 <motion.div

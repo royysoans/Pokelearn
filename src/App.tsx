@@ -116,20 +116,22 @@ const App = () => {
           <Toaster />
           <Sonner />
 
-          {/* Global mute button - Styled to match theme */}
-          <motion.button
-            onClick={toggleMute}
-            aria-label={muted ? "Unmute music" : "Mute music"}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="fixed top-4 right-4 z-50 p-3 rounded-xl bg-card/80 backdrop-blur-md border-2 border-primary/30 hover:border-primary shadow-lg hover:shadow-primary/20 transition-all duration-300 group"
-          >
-            {muted ? (
-              <VolumeX className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            ) : (
-              <Volume2 className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-            )}
-          </motion.button>
+          <div className="fixed top-4 right-4 z-50 flex gap-2">
+            {/* Global mute button - Styled to match theme */}
+            <motion.button
+              onClick={toggleMute}
+              aria-label={muted ? "Unmute music" : "Mute music"}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="p-3 rounded-xl bg-card/80 backdrop-blur-md border-2 border-primary/30 hover:border-primary shadow-lg hover:shadow-primary/20 transition-all duration-300 group"
+            >
+              {muted ? (
+                <VolumeX className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              ) : (
+                <Volume2 className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+              )}
+            </motion.button>
+          </div>
 
           <BrowserRouter>
             <AuthProvider>
