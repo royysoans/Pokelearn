@@ -62,7 +62,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     if (path === "home" || path === "") {
       setCurrentPageState("home");
-    } else if (["login", "signup", "starter", "regions", "gyms", "battle", "pokedex", "badges", "leaderboard", "mastery", "ai-training", "ai-battle"].includes(path)) {
+    } else if (["login", "signup", "starter", "regions", "gyms", "battle", "pokedex", "badges", "leaderboard", "mastery", "ai-training", "ai-battle", "multiplayer"].includes(path)) {
       setCurrentPageState(path as GamePage);
     }
   }, [location]);
@@ -259,13 +259,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // User is logging out - save their data BEFORE resetting isGameLoadedRef
       console.log("🚨 User logging out, saving data before reset");
 
-      // CRITICAL FIX: Call save FIRST while isGameLoadedRef is still true
-      const savePromise = saveGameStateRef.current(prevUser);
-
-      // CRITICAL: Wait for save to complete before resetting state
-      setTimeout(async () => {
+      // CRITICAL FIX: Properly await the save before resetting state
+      // Using an async IIFE instead of a fixed timeout to avoid data loss
+      (async () => {
         try {
-          await savePromise;
+          await saveGameStateRef.current(prevUser);
           console.log("✅ Logout save completed successfully");
         } catch (err) {
           console.error("❌ Logout save failed:", err);
@@ -285,7 +283,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           currentPage: "home",
           buddyPokemonId: null,
         });
-      }, 500); // Give save time to complete
+      })();
     } else if (prevUser !== user && user) {
       // User changed (login or switch) - reset and load new data
       isGameLoadedRef.current = false;
@@ -308,9 +306,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   // ---------------- AUTO SAVE ----------------
   useEffect(() => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    // Only auto-save if user is logged in AND has some data
-    // This prevents saving empty state during logout
-    if (user && (gameState.pokemon.length > 0 || Object.keys(gameState.completedLevels).length > 0)) {
+    // Only auto-save if user is logged in and game state is loaded
+    if (user && isGameLoadedRef.current) {
       saveTimeoutRef.current = setTimeout(() => saveGameState(), 2000);
     }
     return () => {
@@ -469,10 +466,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       }));
 
       const dbUpdates: any = {};
-      if (updates.name) dbUpdates.name = updates.name;
-      if (updates.avatarId) dbUpdates.avatar_id = updates.avatarId;
-      if (updates.bio) dbUpdates.bio = updates.bio;
-      if (updates.cardBackground) dbUpdates.card_background = updates.cardBackground;
+      if (updates.name !== undefined) dbUpdates.name = updates.name;
+      if (updates.avatarId !== undefined) dbUpdates.avatar_id = updates.avatarId;
+      if (updates.bio !== undefined) dbUpdates.bio = updates.bio;
+      if (updates.cardBackground !== undefined) dbUpdates.card_background = updates.cardBackground;
 
       const { error } = await supabase
         .from("profiles")

@@ -18,7 +18,7 @@ interface LeaderboardEntry {
 
 
 export function Leaderboard() {
-  const { gameState, setCurrentPage } = useGame();
+  const { gameState, setCurrentPage, user } = useGame();
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserRank, setCurrentUserRank] = useState<number | null>(null);
@@ -55,8 +55,7 @@ export function Leaderboard() {
 
       setLeaderboardData(sortedData);
 
-      // Find current user rank
-      const { data: { user } } = await supabase.auth.getUser();
+      // Find current user rank using context user
       if (user) {
         const myEntry = sortedData.find(e => e.userId === user.id);
         if (myEntry) setCurrentUserRank(myEntry.rank);

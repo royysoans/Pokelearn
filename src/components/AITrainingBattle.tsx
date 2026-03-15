@@ -146,7 +146,7 @@ export function AITrainingBattle() {
 
         toast({
             title: `Training Complete!`,
-            description: `You scored ${correctAnswers + (selectedAnswer === currentQuestion.c ? 1 : 0)} out of ${questions.length}.`,
+            description: `You scored ${correctAnswers} out of ${questions.length}.`,
         });
     };
 

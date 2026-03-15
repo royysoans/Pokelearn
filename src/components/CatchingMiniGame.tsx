@@ -29,6 +29,8 @@ export function CatchingMiniGame({
   const [timeLeft, setTimeLeft] = useState(15);
   const [shuffledAnswers, setShuffledAnswers] = useState<string[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const phaseRef = useRef(phase);
+  const handleFailRef = useRef<() => void>(() => {});
 
   const getDifficultyRules = () => {
     if (pokemon.rarity === "common") return { type: "Pokéball", count: 1, time: 15, color: "bg-red-500" };
@@ -54,13 +56,21 @@ export function CatchingMiniGame({
     }
   };
 
+  // Keep phaseRef in sync
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+
   useEffect(() => {
     if (phase === "playing") {
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timerRef.current!);
-            handleFail();
+            // Guard: only fail if we're still in "playing" phase
+            if (phaseRef.current === "playing") {
+              handleFailRef.current();
+            }
             return 0;
           }
           return prev - 1;
@@ -103,6 +113,11 @@ export function CatchingMiniGame({
     setPhase("fail");
     setTimeout(() => onCatchFail(), 3000);
   };
+
+  // Keep the ref in sync so the timer always calls the latest version
+  useEffect(() => {
+    handleFailRef.current = handleFail;
+  });
 
   if (phase === "intro") {
     return (

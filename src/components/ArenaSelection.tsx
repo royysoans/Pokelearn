@@ -31,11 +31,11 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
     setSelectedArena(arena);
   };
 
-  const getArenaColor = (arena: string) => {
-    if (arena.includes("Maths")) return "electric";
-    if (arena.includes("Science")) return "grass";
-    if (arena.includes("Coding")) return "psychic";
-    return "normal";
+  const getArenaBorderClass = (arena: string) => {
+    if (arena.includes("Maths")) return "border-yellow-400";
+    if (arena.includes("Science")) return "border-green-400";
+    if (arena.includes("Coding")) return "border-purple-400";
+    return "border-border";
   };
 
   const handleLevelSelect = (level: number) => {
@@ -179,7 +179,7 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 sm:gap-6 mb-8">
           <div
             onClick={() => handleArenaSelect("Maths Arena")}
-            className={`bg-card/90 border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform border-${getArenaColor("Maths Arena")}`}
+            className={`bg-card/90 border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform ${getArenaBorderClass("Maths Arena")}`}
           >
             <h3 className="text-xl sm:text-2xl md:text-3xl mb-2 text-primary text-center">🔢</h3>
             <h3 className="text-lg sm:text-xl md:text-2xl text-center">Maths Arena</h3>
@@ -187,7 +187,7 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
 
           <div
             onClick={() => handleArenaSelect("Science Arena")}
-            className={`bg-card/90 border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform border-${getArenaColor("Science Arena")}`}
+            className={`bg-card/90 border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform ${getArenaBorderClass("Science Arena")}`}
           >
             <h3 className="text-xl sm:text-2xl md:text-3xl mb-2 text-primary text-center">🔬</h3>
             <h3 className="text-lg sm:text-xl md:text-2xl text-center">Science Arena</h3>
@@ -195,7 +195,7 @@ export function ArenaSelection({ onStartBattle, onBack }: ArenaSelectionProps) {
 
           <div
             onClick={() => handleArenaSelect("Coding Arena")}
-            className={`bg-card/90 border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform border-${getArenaColor("Coding Arena")}`}
+            className={`bg-card/90 border-4 rounded-lg p-8 cursor-pointer hover:scale-105 transition-transform ${getArenaBorderClass("Coding Arena")}`}
           >
             <h3 className="text-xl sm:text-2xl md:text-3xl mb-2 text-primary text-center">💻</h3>
             <h3 className="text-lg sm:text-xl md:text-2xl text-center">Coding Arena</h3>
