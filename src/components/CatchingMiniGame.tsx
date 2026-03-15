@@ -104,7 +104,7 @@ export function CatchingMiniGame({
     if (isCorrect) {
       if (currentQIndex + 1 >= rules.count) {
         setPhase("success");
-        setTimeout(() => onCatchSuccess(), 5500);
+        setTimeout(() => onCatchSuccess(), 6800);
       } else {
         // Flash the ring pulse, then advance
         setShowRingPulse(true);
@@ -121,7 +121,7 @@ export function CatchingMiniGame({
 
   const handleFail = () => {
     setPhase("fail");
-    setTimeout(() => onCatchFail(), 3000);
+    setTimeout(() => onCatchFail(), 5000);
   };
 
   // Keep the ref in sync so the timer always calls the latest version
@@ -167,110 +167,141 @@ export function CatchingMiniGame({
     );
   }
 
+  const ballColorMap = {
+    "Pokéball": "#ef4444",
+    "Great Ball": "#3b82f6",
+    "Ultra Ball": "#eab308"
+  };
+  const getBallTopColor = () => ballColorMap[rules.type as keyof typeof ballColorMap] || "#ef4444";
+
   if (phase === "success") {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
-           style={{ background: "radial-gradient(ellipse at center, #0a0a2e 0%, #000000 100%)" }}>
-
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-black">
+        
         {/* Scene container */}
         <div className="relative w-80 h-80 flex items-center justify-center">
 
-          {/* ---- PHASE 1: Pokémon appears center ---- */}
+          {/* ---- PHASE 1: Pokémon gets hit and absorbed ---- */}
           <motion.img
             src={pokemon.image}
             alt={pokemon.name}
             className="absolute pixelated w-32 h-32 object-contain"
             style={{ top: "20%", filter: `drop-shadow(0 0 20px ${pokemon.color})` }}
-            initial={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 1, scale: 1, filter: `brightness(1) drop-shadow(0 0 20px ${pokemon.color})` }}
             animate={{
-              opacity: [1, 1, 1, 0],
-              scale: [1, 1, 1.1, 0],
+              opacity: [1, 1, 0.8, 0],
+              scale: [1, 1, 0.3, 0],
+              filter: [
+                `brightness(1) drop-shadow(0 0 20px ${pokemon.color})`, 
+                `brightness(1) drop-shadow(0 0 20px ${pokemon.color})`,
+                `brightness(3) drop-shadow(0 0 40px ${pokemon.color})`, 
+                `brightness(3) drop-shadow(0 0 40px ${pokemon.color})`
+              ]
             }}
-            transition={{ duration: 1.2, delay: 0.8, times: [0, 0.5, 0.7, 1], ease: "easeIn" }}
+            transition={{ duration: 1.2, delay: 0.6, times: [0, 0.4, 0.8, 1], ease: "anticipate" }}
           />
 
-          {/* Red flash when pokemon gets absorbed */}
+          {/* Red/White flash when pokemon gets absorbed */}
           <motion.div
-            className="absolute rounded-full pointer-events-none"
+            className="absolute rounded-full pointer-events-none mix-blend-screen"
             style={{ top: "25%", width: 140, height: 140, left: "calc(50% - 70px)" }}
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: [0, 0, 0.8, 0], scale: [0.5, 0.5, 1.5, 2] }}
-            transition={{ duration: 1.2, delay: 0.8, times: [0, 0.6, 0.8, 1] }}
+            initial={{ opacity: 0, scale: 0.1 }}
+            animate={{ opacity: [0, 0, 1, 0], scale: [0.1, 0.1, 1.2, 0.2] }}
+            transition={{ duration: 1.2, delay: 0.6, times: [0, 0.8, 0.85, 1], ease: "circIn" }}
           >
-            <div className="w-full h-full rounded-full bg-white" />
+            <div className={`w-full h-full rounded-full bg-white shadow-[0_0_50px_20px_white]`} />
           </motion.div>
 
-          {/* ---- PHASE 2: Pokéball flies up from bottom ---- */}
+          {/* ---- PHASE 2 & 3: Pokéball throw, hit, and drop ---- */}
           <motion.div
-            className="absolute"
-            style={{ width: 56, height: 56, left: "calc(50% - 28px)" }}
-            initial={{ bottom: "-20%", opacity: 0 }}
+            className="absolute z-10"
+            style={{ width: 48, height: 48, left: "calc(50% - 24px)" }}
+            initial={{ bottom: "-20%", left: "-20%", opacity: 0, scale: 3, rotate: -720 }}
             animate={{
-              bottom: ["-20%", "35%", "35%", "35%", "35%"],
-              opacity: [0, 1, 1, 1, 1],
+              bottom: ["-20%", "55%", "35%"],
+              left: ["-20%", "50%", "50%"],
+              opacity: [1, 1, 1],
+              scale: [3, 1.2, 1],
+              rotate: [-720, -180, 0]
             }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            transition={{ 
+                duration: 1.2,
+                times: [0, 0.6, 1],
+                ease: ["easeOut", "easeIn"]
+            }}
           >
-            {/* The Pokéball after it lands */}
+            {/* The Pokéball wobbling */}
             <motion.div
               className="w-full h-full"
               initial={{ rotate: 0 }}
               animate={{
-                // Wobble: pause, left, right, pause, left, right, pause, left, right, settle
-                rotate: [0, 0, 0, 25, -25, 0, 0, 25, -25, 0, 0, 20, -20, 0],
+                rotate: [0, 0, 20, -15, 0, 0, 20, -15, 0, 0, 20, -15, 0, 0],
               }}
               transition={{
-                duration: 4.0,
-                delay: 2.0,
-                times:  [0, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.35, 0.4, 0.45, 0.55, 0.6, 0.65, 0.7],
+                duration: 3.5,
+                delay: 1.2,
+                times:  [0, 0.1, 0.16, 0.22, 0.28, 0.45, 0.51, 0.57, 0.63, 0.8, 0.86, 0.92, 0.98, 1],
                 ease: "easeInOut",
               }}
             >
               <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl">
                 <circle cx="50" cy="50" r="48" fill="white" stroke="#222" strokeWidth="4" />
-                <path d="M 2 50 A 48 48 0 0 1 98 50 Z" fill="#ef4444" />
+                <path d="M 2 50 A 48 48 0 0 1 98 50 Z" fill={getBallTopColor()} />
                 <line x1="2" y1="50" x2="38" y2="50" stroke="#222" strokeWidth="4" />
                 <line x1="62" y1="50" x2="98" y2="50" stroke="#222" strokeWidth="4" />
                 <circle cx="50" cy="50" r="12" fill="#222" />
                 <circle cx="50" cy="50" r="8" fill="white" />
-                <circle cx="47" cy="47" r="2.5" fill="rgba(255,255,255,0.7)" />
+                {/* Flashing Button */}
+                <motion.circle 
+                  cx="50" cy="50" r="6"
+                  animate={{ fill: ["#ffffff", "#ef4444", "#ffffff"] }}
+                  transition={{ duration: 0.8, delay: 1.2, repeat: 3, repeatDelay: 0.3, repeatType: "loop" }}
+                />
               </svg>
             </motion.div>
 
-            {/* Star flash on final lock — appears after 3 wobbles */}
+            {/* Star flash on final lock */}
             <motion.div
               className="absolute inset-0 flex items-center justify-center pointer-events-none"
               initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: [0, 0, 1, 0], scale: [0, 0, 1.8, 2.5] }}
-              transition={{ duration: 1.0, delay: 4.6 }}
+              animate={{ opacity: [0, 1, 0], scale: [0, 2, 3] }}
+              transition={{ duration: 0.6, delay: 4.6, ease: "easeOut" }}
             >
-              <div className="w-16 h-16 rounded-full bg-yellow-300" style={{ boxShadow: "0 0 40px 20px rgba(250,204,21,0.6)" }} />
+              {/* Star shapes */}
+              <div className="absolute w-2 h-16 bg-yellow-300 rounded-full rotate-45" style={{ boxShadow: "0 0 10px #fbbf24" }} />
+              <div className="absolute w-2 h-16 bg-yellow-300 rounded-full -rotate-45" style={{ boxShadow: "0 0 10px #fbbf24" }} />
+              <div className="absolute w-16 h-2 bg-yellow-300 rounded-full" style={{ boxShadow: "0 0 10px #fbbf24" }} />
+              <div className="absolute w-2 h-16 bg-yellow-300 rounded-full" style={{ boxShadow: "0 0 10px #fbbf24" }} />
+              <div className="w-12 h-12 rounded-full bg-yellow-100 shadow-[0_0_30px_10px_#fde047]" />
             </motion.div>
           </motion.div>
         </div>
 
-        {/* ---- PHASE 3: GOTCHA text ---- */}
+        {/* ---- PHASE 4: GOTCHA text ---- */}
         <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 4.8, type: "spring", stiffness: 300, damping: 20 }}
+          initial={{ scale: 0.5, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ delay: 4.8, type: "spring", stiffness: 400, damping: 15 }}
           className="text-center mt-4"
         >
           <h2
-            className="text-5xl font-black text-yellow-400 tracking-widest"
-            style={{ textShadow: "4px 4px 0 #000, 0 0 30px rgba(250,204,21,0.7)" }}
+            className="text-5xl md:text-6xl font-black text-yellow-400 tracking-widest italic"
+            style={{ textShadow: "4px 4px 0 #000, 0 0 20px rgba(250,204,21,0.6)" }}
           >
             GOTCHA!
           </h2>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 5.2 }}
-            className="text-lg mt-2 font-bold"
-            style={{ color: pokemon.color, textShadow: "0 0 10px rgba(255,255,255,0.3)" }}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 5.2, ease: "easeOut" }}
+            className="mt-4 flex justify-center"
           >
-            {pokemon.name} was caught!
-          </motion.p>
+            <div className="px-6 py-2 bg-black/40 backdrop-blur-sm rounded-full border border-white/20 inline-block">
+              <p className="text-lg md:text-xl font-bold text-white shadow-black drop-shadow-md">
+                <span style={{ color: pokemon.color }}>{pokemon.name}</span> was caught!
+              </p>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
     );
@@ -278,17 +309,126 @@ export function CatchingMiniGame({
 
   if (phase === "fail") {
     return (
-      <div className="bg-card border-4 border-border rounded p-4 sm:p-6 mb-6 flex flex-col items-center justify-center min-h-[200px] animate-in fade-in duration-300">
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-black">
+        
+        <div className="relative w-80 h-80 flex items-center justify-center">
+
+          {/* Phase 1: Pokemon gets hit/absorbed */}
+          <motion.img
+            src={pokemon.image}
+            alt={pokemon.name}
+            className="absolute pixelated w-32 h-32 object-contain"
+            style={{ top: "20%", filter: `drop-shadow(0 0 20px ${pokemon.color})` }}
+            initial={{ opacity: 1, scale: 1, filter: `brightness(1) drop-shadow(0 0 20px ${pokemon.color})` }}
+            animate={{
+              opacity: [1, 1, 0, 0, 1, 1],
+              scale: [1, 1, 0.2, 0.2, 1.2, 1],
+              filter: [
+                `brightness(1) drop-shadow(0 0 20px ${pokemon.color})`, 
+                `brightness(1) drop-shadow(0 0 20px ${pokemon.color})`, 
+                `brightness(3) drop-shadow(0 0 20px ${pokemon.color})`, 
+                `brightness(3) drop-shadow(0 0 20px ${pokemon.color})`, 
+                `brightness(3) drop-shadow(0 0 20px ${pokemon.color})`, 
+                `brightness(1) drop-shadow(0 0 20px ${pokemon.color})`
+              ]
+            }}
+            transition={{ 
+              duration: 2.8, 
+              delay: 0.3, 
+              times: [0, 0.2, 0.25, 0.7, 0.8, 1], 
+              ease: "easeInOut" 
+            }}
+          />
+
+          {/* Red/White flash when pokemon gets absorbed */}
+          <motion.div
+            className="absolute rounded-full pointer-events-none mix-blend-screen"
+            style={{ top: "25%", width: 140, height: 140, left: "calc(50% - 70px)" }}
+            initial={{ opacity: 0, scale: 0.1 }}
+            animate={{ opacity: [0, 0, 1, 0], scale: [0.1, 0.1, 1.2, 0.2] }}
+            transition={{ duration: 1.2, delay: 0.3, times: [0, 0.8, 0.85, 1], ease: "circIn" }}
+          />
+
+          {/* Phase 2: Pokeball thrown, wobble, break */}
+          <motion.div
+            className="absolute z-10"
+            style={{ width: 48, height: 48, left: "calc(50% - 24px)" }}
+            initial={{ bottom: "-20%", left: "-20%", opacity: 0, scale: 3, rotate: -720 }}
+            animate={{
+              bottom: ["-20%", "55%", "35%", "35%", "35%"],
+              left: ["-20%", "50%", "50%", "50%", "50%"],
+              opacity: [1, 1, 1, 1, 0],
+              scale: [3, 1.2, 1, 1, 1.5],
+              rotate: [-720, -180, 0, 0, 0]
+            }}
+            transition={{ 
+                duration: 3.5,
+                delay: 0,
+                times: [0, 0.2, 0.34, 0.85, 1],
+                ease: ["easeOut", "easeIn", "linear", "linear"]
+            }}
+          >
+            {/* The Pokéball wobbling once then splitting */}
+            <motion.div
+              className="w-full h-full relative"
+              initial={{ rotate: 0 }}
+              animate={{ rotate: [0, 0, 20, -15, 0, 0] }}
+              transition={{ duration: 1.8, delay: 1.2, times: [0, 0.1, 0.3, 0.5, 0.7, 1], ease: "easeInOut" }}
+            >
+              {/* Ball Bottom half */}
+              <motion.svg viewBox="0 0 100 50" className="absolute bottom-0 w-[48px] h-[24px] drop-shadow-2xl"
+                  initial={{ y: 24, rotate: 0, opacity: 1 }}
+                  animate={{ y: [24, 24, 24, 34], rotate: [0, 0, 0, -10], opacity: [1, 1, 1, 0] }}
+                  transition={{ duration: 3.5, times: [0, 0.82, 0.86, 1] }}
+                  style={{ transformOrigin: "bottom center", overflow: 'visible' }}
+              >
+                {/* Because viewBox is 0 0 100 50 but we map it to 100x100 circle bottom half */}
+                <path d="M 2 0 A 48 48 0 0 0 98 0 Z" fill="white" stroke="#222" strokeWidth="4" />
+                <path d="M 2 0 L 98 0" stroke="#222" strokeWidth="4" />
+              </motion.svg>
+              
+              {/* Ball Top half */}
+              <motion.svg viewBox="0 0 100 50" className="absolute top-0 w-[48px] h-[24px] drop-shadow-2xl"
+                  initial={{ y: 0, rotate: 0, opacity: 1 }}
+                  animate={{ y: [0, 0, 0, -15], x: [0, 0, 0, -10], rotate: [0, 0, 0, -20], opacity: [1, 1, 1, 0] }}
+                  transition={{ duration: 3.5, times: [0, 0.82, 0.86, 1] }}
+                  style={{ transformOrigin: "top left", overflow: 'visible' }}
+              >
+                <path d="M 2 50 A 48 48 0 0 1 98 50 Z" fill={getBallTopColor()} stroke="#222" strokeWidth="4" />
+                <path d="M 2 50 L 98 50" stroke="#222" strokeWidth="4" />
+                <circle cx="50" cy="50" r="12" fill="#222" />
+                <circle cx="50" cy="50" r="8" fill="white" />
+              </motion.svg>
+            </motion.div>
+            
+            {/* Burst/Smoke when breaking open */}
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: [0, 0, 0, 1, 0], scale: [0.5, 0.5, 0.5, 2.5, 3] }}
+              transition={{ duration: 3.5, times: [0, 0.8, 0.85, 0.9, 1] }}
+            >
+              <div className="w-16 h-16 rounded-full bg-red-100" style={{ boxShadow: "0 0 30px 20px #fca5a5", filter: "blur(4px)" }} />
+              <div className="absolute w-8 h-8 rounded-full bg-white blur-sm" style={{ top: -20, left: -20, boxShadow: "0 0 20px #fff" }} />
+              <div className="absolute w-10 h-10 rounded-full bg-gray-200 blur-md" style={{ top: 10, right: -30, boxShadow: "0 0 20px #e2e8f0" }} />
+            </motion.div>
+          </motion.div>
+        </div>
+
         <motion.div
-            initial={{ x: -20 }}
-            animate={{ x: 20 }}
-            transition={{ repeat: Infinity, repeatType: "reverse", duration: 0.1 }}
-            className="text-6xl mb-4"
+           initial={{ opacity: 0, y: 30 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ delay: 2.6, ease: "easeOut" }}
+           className="mt-8 text-center"
         >
-            💨
+          <div className="inline-block px-6 py-4 bg-red-950/80 border-2 border-red-500 rounded-lg backdrop-blur-md shadow-[0_0_30px_rgba(239,68,68,0.4)]">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+              <span className="text-3xl">💢</span> Oh no!
+            </h2>
+            <p className="text-red-200 font-medium text-lg">The wild Pokémon broke free!</p>
+          </div>
         </motion.div>
-        <h2 className="text-xl text-destructive font-bold mb-2">Oh no!</h2>
-        <p className="text-muted-foreground text-sm font-bold">The Pokémon broke free and fled!</p>
+
       </div>
     );
   }
