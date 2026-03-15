@@ -12,6 +12,7 @@ import { QuizSettings } from "./QuizSettings";
 import { DownloadQuizButton } from "./DownloadQuizButton";
 import { Badge3D } from "./Badge3D";
 import { CatchingMiniGame } from "./CatchingMiniGame";
+import { WhosThatPokemon } from "./WhosThatPokemon";
 
 interface BattleScreenProps {
   gym: string;
@@ -36,6 +37,9 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
   const [battleEnded, setBattleEnded] = useState(false);
   const [battlePhase, setBattlePhase] = useState<"battle" | "catch" | "victory" | "fled">("battle");
   const [buttonText, setButtonText] = useState("Flee Battle");
+  const [canStartBattle, setCanStartBattle] = useState(false);
+  const animTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const MIN_ANIM_MS = 4500; // WhosThatPokemon animation takes 3.5s, give 1s buffer
   const [quizFontSize, setQuizFontSize] = useState<"sm" | "base" | "lg" | "xl">(() =>
     (localStorage.getItem("quizFontSize") as "sm" | "base" | "lg" | "xl") || "base"
   );
@@ -66,7 +70,13 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
 
       if (level === "leader") {
         pokemonKey = `${regionName}-Leader`;
-        questionCount = 15; // 5 each subject
+
+        // Set pokemon FIRST so WhosThatPokemon screen can show while questions load
+        selectedPokemon = [pokemonDB[arenaPokemonMap[regionName][pokemonKey]]];
+        setBattlePokemon(selectedPokemon);
+        setCanStartBattle(false);
+        if (animTimerRef.current) clearTimeout(animTimerRef.current);
+        animTimerRef.current = setTimeout(() => setCanStartBattle(true), MIN_ANIM_MS);
 
         const [mathQs, sciQs, codeQs] = await Promise.all([
           generateQuestions("math", 5, regionName, gym, level),
@@ -74,31 +84,34 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
           generateQuestions("coding", 5, regionName, gym, level),
         ]);
         const allQuestions = [...mathQs, ...sciQs, ...codeQs].sort(() => 0.5 - Math.random());
-        selectedPokemon = [pokemonDB[arenaPokemonMap[regionName][pokemonKey]]];
         setQuestions(allQuestions);
-        setBattlePokemon(selectedPokemon);
         setCorrectAnswers(0);
         correctAnswersRef.current = 0;
         return;
       }
 
       // For levels 1-10, always 10 questions
-      questionCount = 10;
       pokemonKey = `${gym}-${level}`;
 
       const pokemonId = arenaPokemonMap[regionName][pokemonKey];
       selectedPokemon = [pokemonDB[pokemonId]];
 
+      // Set pokemon FIRST so WhosThatPokemon screen can show while questions load
+      setBattlePokemon(selectedPokemon);
+      setCanStartBattle(false);
+      // Start minimum animation timer — ensures WhosThatPokemon always plays fully
+      if (animTimerRef.current) clearTimeout(animTimerRef.current);
+      animTimerRef.current = setTimeout(() => setCanStartBattle(true), MIN_ANIM_MS);
+      setCorrectAnswers(0);
+      correctAnswersRef.current = 0;
+
       // Determine subject from gym name
-      let subject = gym.includes("Maths") ? "math"
+      const subject = gym.includes("Maths") ? "math"
         : gym.includes("Science") ? "science"
           : "coding";
 
-      const qs = await generateQuestions(subject, questionCount, regionName, gym, level);
+      const qs = await generateQuestions(subject, 10, regionName, gym, level);
       setQuestions(qs);
-      setBattlePokemon(selectedPokemon);
-      setCorrectAnswers(0);
-      correctAnswersRef.current = 0;
     };
 
     loadQuestions();
@@ -274,24 +287,18 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
 
   if (!currentOpponent) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
         <div className="text-center">
-          <div className="animate-bounce-slow text-6xl mb-4">🎮</div>
-          <p className="text-xl text-primary">Preparing battle...</p>
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+          <p className="text-xl text-primary animate-pulse">Entering the arena...</p>
         </div>
       </div>
     );
   }
 
-  if (!currentQuestion) {
-    return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-pulse text-6xl mb-4">⚡</div>
-          <p className="text-xl text-primary">Generating questions...</p>
-        </div>
-      </div>
-    );
+  // Show WhosThatPokemon if: no questions yet, OR animation hasn't completed its minimum duration
+  if (!currentQuestion || !canStartBattle) {
+    return <WhosThatPokemon pokemon={currentOpponent} gym={gym} />;
   }
 
   const background = gameState.currentRegion?.background || "";

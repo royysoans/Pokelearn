@@ -130,7 +130,9 @@ Deno.serve({ port: PORT }, async (req: Request): Promise<Response> => {
     };
 
     const subj = subject.toLowerCase();
-    const topics = regionTopics[region ?? "Kanto"]?.[subj] ?? [];
+    // Client sends "coding" but regionTopics uses "technical"
+    const topicKey = (subj === "coding" ? "technical" : subj) as "math" | "science" | "technical";
+    const topics = regionTopics[region ?? "Kanto"]?.[topicKey] ?? [];
 
     const systemPrompt = `You are a quiz generator for an educational Pokémon game.
 Generate exactly ${count} ${subject} questions from these topics: ${topics.join(", ")}.

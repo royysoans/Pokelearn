@@ -55,8 +55,6 @@ Follow these instructions to set up the project locally.
 2.  **Install dependencies**
     ```bash
     npm install
-    # or
-    bun install
     ```
 
 3.  **Environment Setup**
