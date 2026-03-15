@@ -18,16 +18,25 @@ export type Database = {
         Row: {
           id: string
           name: string
+          avatar_id: string
+          bio: string
+          card_background: string
           created_at: string
         }
         Insert: {
           id: string
           name: string
+          avatar_id?: string
+          bio?: string
+          card_background?: string
           created_at?: string
         }
         Update: {
           id?: string
           name?: string
+          avatar_id?: string
+          bio?: string
+          card_background?: string
           created_at?: string
         }
         Relationships: [
@@ -108,6 +117,8 @@ export type Database = {
           xp_to_next_level: number
           completed_levels: Json
           coins: number
+          current_page: string
+          buddy_pokemon_id: number | null
           updated_at: string
         }
         Insert: {
@@ -119,6 +130,8 @@ export type Database = {
           xp_to_next_level?: number
           completed_levels?: Json
           coins?: number
+          current_page?: string
+          buddy_pokemon_id?: number | null
           updated_at?: string
         }
         Update: {
@@ -130,6 +143,8 @@ export type Database = {
           xp_to_next_level?: number
           completed_levels?: Json
           coins?: number
+          current_page?: string
+          buddy_pokemon_id?: number | null
           updated_at?: string
         }
         Relationships: [

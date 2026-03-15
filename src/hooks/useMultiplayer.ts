@@ -298,6 +298,8 @@ export const useMultiplayer = () => {
                 (payload) => {
                     // If I am NOT host, I should join this battle
                     if (!gameStateRef.current.isHost) {
+                        const battle = payload.new as any;
+                        enterBattle(battle);
                     }
                 });
         activeChannelsRef.current.push(battleChannel);

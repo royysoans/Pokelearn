@@ -25,11 +25,20 @@ interface GeminiResponse {
       parts?: Array<{ text?: string }>;
     };
   }>;
+  error?: {
+    code?: number;
+    message?: string;
+    status?: string;
+  };
 }
 
-const PORT = Number(Deno.env.get("PORT") ?? "54321");
+// Models to try in order — Gemini 3 Flash first, then fallback to 2.5 Flash
+const GEMINI_MODELS = [
+  "gemini-3-flash-preview",
+  "gemini-2.5-flash",
+];
 
-Deno.serve({ port: PORT }, async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
   const url = new URL(req.url);
 
   // favicon.ico
@@ -70,7 +79,13 @@ Deno.serve({ port: PORT }, async (req: Request): Promise<Response> => {
 
     // Load Gemini API key
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("Server configuration error: Missing GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      console.error("❌ GEMINI_API_KEY is not set in environment");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error", details: "Missing GEMINI_API_KEY" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Region & topic configuration
     const regionData: Record<string, { difficulty: string; flavor: string }> = {
@@ -145,53 +160,89 @@ Respond ONLY with valid JSON:
   ]
 }`;
 
-    // ✅ Use Gemini 2.5 Flash (correct model)
-    const GEMINI_URL =
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    // Try each model in order until one succeeds
+    let lastError: string = "";
+    for (const model of GEMINI_MODELS) {
+      try {
+        console.log(`🤖 Trying model: ${model}`);
+        const GEMINI_URL =
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
 
-    const response = await fetch(GEMINI_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: systemPrompt }] }],
-        generationConfig: { temperature: 0.8, topK: 40, topP: 0.95 },
-      }),
-    });
+        const response = await fetch(GEMINI_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: systemPrompt }] }],
+            generationConfig: { temperature: 0.8, topK: 40, topP: 0.95 },
+          }),
+        });
 
-    if (!response.ok) {
-      const text = await response.text();
-      console.error("Gemini API error:", response.status, text);
-      throw new Error(`Gemini API error: ${response.status}`);
+        if (!response.ok) {
+          const text = await response.text();
+          console.error(`⚠️ ${model} failed (${response.status}):`, text);
+          lastError = `${model}: HTTP ${response.status} — ${text.substring(0, 200)}`;
+          continue; // Try next model
+        }
+
+        const data: GeminiResponse = await response.json();
+
+        // Check for API-level errors in the response body
+        if (data.error) {
+          console.error(`⚠️ ${model} returned error:`, data.error.message);
+          lastError = `${model}: ${data.error.message}`;
+          continue;
+        }
+
+        const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+        if (!content) {
+          console.warn(`⚠️ ${model} returned empty content, trying next model`);
+          lastError = `${model}: Empty response content`;
+          continue;
+        }
+
+        let parsedQuestions: Question[] = [];
+        try {
+          const clean = content.trim().replace(/^```json\s*/i, "").replace(/```$/i, "");
+          const json = JSON.parse(clean);
+          parsedQuestions = json.questions ?? [];
+          if (!parsedQuestions.length) throw new Error("No questions found in parsed response");
+        } catch (parseErr) {
+          console.warn(`⚠️ Failed to parse ${model} output:`, parseErr);
+          lastError = `${model}: JSON parse error`;
+          continue;
+        }
+
+        console.log(`✅ Generated ${parsedQuestions.length} questions using ${model}.`);
+        return new Response(JSON.stringify({ questions: parsedQuestions }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+
+      } catch (fetchErr) {
+        console.error(`⚠️ ${model} fetch error:`, fetchErr);
+        lastError = `${model}: ${fetchErr instanceof Error ? fetchErr.message : String(fetchErr)}`;
+        continue;
+      }
     }
 
-    const data: GeminiResponse = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    // All models failed — return fallback questions with a warning
+    console.error("❌ All Gemini models failed. Returning fallback questions. Last error:", lastError);
+    const fallbackQuestions: Question[] = [
+      { q: "What is 2 + 2?", a: ["3", "4", "5"], c: "4", e: "2 + 2 equals 4. If you have two apples and get two more, you have four apples." },
+      { q: "Which Pokémon type is strong against Water?", a: ["Fire", "Electric", "Rock"], c: "Electric", e: "Electric-type moves are super effective against Water-type Pokémon because water conducts electricity." },
+      { q: "What color is Pikachu?", a: ["Red", "Yellow", "Blue"], c: "Yellow", e: "Pikachu is the iconic yellow electric mouse Pokémon." },
+    ];
 
-    let parsedQuestions: Question[] = [];
-
-    try {
-      const clean = content.trim().replace(/^```json\s*/i, "").replace(/```$/i, "");
-      const json = JSON.parse(clean);
-      parsedQuestions = json.questions ?? [];
-      if (!parsedQuestions.length) throw new Error("No questions found");
-    } catch (err) {
-      console.warn("⚠️ Failed to parse Gemini output, falling back to default:", err);
-      parsedQuestions = [
-        { q: "What is 2 + 2?", a: ["3", "4", "5"], c: "4", e: "2 + 2 equals 4. If you have two apples and get two more, you have four apples." },
-        { q: "Which Pokémon type is strong against Water?", a: ["Fire", "Electric", "Rock"], c: "Electric", e: "Electric-type moves are super effective against Water-type Pokémon because water conducts electricity." },
-        { q: "What color is Pikachu?", a: ["Red", "Yellow", "Blue"], c: "Yellow", e: "Pikachu is the iconic yellow electric mouse Pokémon." },
-      ];
-    }
-
-    console.log(`✅ Generated ${parsedQuestions.length} questions.`);
-    return new Response(JSON.stringify({ questions: parsedQuestions }), {
+    return new Response(JSON.stringify({ questions: fallbackQuestions, fallback: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (error) {
-    console.error("❌ Error in generate-quiz:", error);
+    console.error("❌ Unhandled error in generate-quiz:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : String(error), details: "Failed to generate quiz questions" }),
+      JSON.stringify({
+        error: error instanceof Error ? error.message : String(error),
+        details: "Failed to generate quiz questions",
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
