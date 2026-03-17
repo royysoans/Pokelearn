@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PixelButton } from '@/components/PixelButton';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSound } from '@/hooks/use-sound';
+import { GameState } from '@/hooks/useMultiplayer';
 
 interface MultiplayerBattleProps {
-    gameState: any; // Using any for now, should be typed
+    gameState: GameState;
     onSubmitAnswer: (isCorrect: boolean) => void;
     onRequestRematch: () => void;
+    onExitGame: () => void;
     userId: string;
 }
 
-export function MultiplayerBattle({ gameState, onSubmitAnswer, onRequestRematch, userId }: MultiplayerBattleProps) {
+export function MultiplayerBattle({ gameState, onSubmitAnswer, onRequestRematch, onExitGame, userId }: MultiplayerBattleProps) {
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [showResult, setShowResult] = useState(false);
     const [isCorrect, setIsCorrect] = useState(false);
@@ -63,9 +65,17 @@ export function MultiplayerBattle({ gameState, onSubmitAnswer, onRequestRematch,
         }
     }, [gameState.myHp, gameState.opponentHp]);
 
+    const victoryPlayedRef = useRef(false);
+
+    useEffect(() => {
+        if ((gameState.status === 'finished' || gameState.winner) && gameState.winner === userId && !victoryPlayedRef.current) {
+            playVictory();
+            victoryPlayedRef.current = true;
+        }
+    }, [gameState.status, gameState.winner, userId, playVictory]);
+
     if (gameState.status === 'finished' || gameState.winner) {
         const iWon = gameState.winner === userId;
-        if (iWon) playVictory();
 
         return (
             <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-1000">
@@ -92,7 +102,7 @@ export function MultiplayerBattle({ gameState, onSubmitAnswer, onRequestRematch,
                             Rematch
                         </PixelButton>
                         <PixelButton
-                            onClick={() => window.location.reload()}
+                            onClick={onExitGame}
                             variant="secondary"
                             className="text-2xl px-12 py-6"
                         >

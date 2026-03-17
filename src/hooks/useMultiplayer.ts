@@ -23,21 +23,45 @@ export interface GameState {
     lastResult: 'correct' | 'wrong' | 'too_slow' | null;
 }
 
+export interface BattlePayload {
+    id: string;
+    lobby_id: string;
+    questions: any[];
+    current_question_index: number;
+    player_1_id: string;
+    player_2_id: string;
+    player_1_hp: number;
+    player_2_hp: number;
+    current_turn: string;
+    winner_id: string | null;
+}
+
+export interface LobbyPayload {
+    id: string;
+    host_id: string;
+    topic: string;
+    player_1_id: string;
+    player_2_id: string | null;
+    status: 'waiting' | 'active' | 'finished';
+}
+
+const initialGameState: GameState = {
+    lobbyId: null,
+    battleId: null,
+    isHost: false,
+    opponent: null,
+    questions: [],
+    currentQuestionIndex: 0,
+    myHp: 10,
+    opponentHp: 10,
+    currentTurn: null,
+    status: 'waiting',
+    winner: null,
+    lastResult: null,
+};
+
 export const useMultiplayer = () => {
-    const [gameState, setGameState] = useState<GameState>({
-        lobbyId: null,
-        battleId: null,
-        isHost: false,
-        opponent: null,
-        questions: [],
-        currentQuestionIndex: 0,
-        myHp: 10, // Default HP 10
-        opponentHp: 10, // Default HP 10
-        currentTurn: null,
-        status: 'waiting',
-        winner: null,
-        lastResult: null,
-    });
+    const [gameState, setGameState] = useState<GameState>(initialGameState);
 
     const enterBattle = (battle: any) => {
         setGameState(prev => {
@@ -76,7 +100,7 @@ export const useMultiplayer = () => {
             .channel(`battle:${battleId}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'battles', filter: `id=eq.${battleId}` },
                 (payload) => {
-                    const battle = payload.new as any;
+                    const battle = payload.new as BattlePayload;
                     setGameState(prev => {
                         const myPlayerId = userId;
                         // const opponentPlayerId = myPlayerId === battle.player_1_id ? battle.player_2_id : battle.player_1_id;
@@ -148,7 +172,16 @@ export const useMultiplayer = () => {
         // Actually, a better way for rematch in this current architecture:
         // Both players stay in lobby. Host triggers new game.
         // For now, let's just reload the page or reset state to 'waiting'
-        window.location.reload();
+        exitGame();
+    };
+
+    const exitGame = () => {
+        // Clear all subscriptions explicitly
+        activeChannelsRef.current.forEach(channel => {
+            supabase.removeChannel(channel);
+        });
+        activeChannelsRef.current = [];
+        setGameState(initialGameState);
     };
 
     const [userId, setUserId] = useState<string | null>(null);
@@ -244,7 +277,7 @@ export const useMultiplayer = () => {
             .channel(`lobby:${lobbyId}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'lobbies', filter: `id=eq.${lobbyId}` },
                 async (payload) => {
-                    const newLobby = payload.new as any;
+                    const newLobby = payload.new as LobbyPayload;
                     const currentGameState = gameStateRef.current;
 
                     if (newLobby.status === 'active' && currentGameState.status === 'waiting') {
@@ -298,7 +331,7 @@ export const useMultiplayer = () => {
                 (payload) => {
                     // If I am NOT host, I should join this battle
                     if (!gameStateRef.current.isHost) {
-                        const battle = payload.new as any;
+                        const battle = payload.new as BattlePayload;
                         enterBattle(battle);
                     }
                 });
@@ -312,6 +345,7 @@ export const useMultiplayer = () => {
         joinLobby,
         submitAnswer,
         requestRematch,
+        exitGame,
         userId
     };
 };

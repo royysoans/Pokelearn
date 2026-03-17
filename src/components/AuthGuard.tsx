@@ -24,7 +24,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
             <p>3. Create a <code>.env.local</code> file in the project root with:</p>
             <pre className="mt-2">
               VITE_SUPABASE_URL=your_project_url<br />
-              VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_key
+              VITE_SUPABASE_ANON_KEY=your_anon_key
             </pre>
             <p>4. Run <code>supabase db reset</code> to apply migrations</p>
           </div>

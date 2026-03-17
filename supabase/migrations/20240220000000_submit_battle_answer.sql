@@ -43,6 +43,12 @@ begin
   -- 4. Handle Correct Answer
   if p_is_correct then
     -- Apply Damage to Opponent
+    if v_battle.player_1_id = p_player_id then
+       v_new_hp := v_battle.player_2_hp - v_damage;
+    else
+       v_new_hp := v_battle.player_1_hp - v_damage;
+    end if;
+
     -- Check Win Condition
     if v_new_hp <= 0 then
        -- Atomic Update for Win

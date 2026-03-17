@@ -5,7 +5,7 @@ import { MultiplayerBattle } from '@/components/Multiplayer/MultiplayerBattle';
 import { useGame } from '@/contexts/GameContext';
 
 export function MultiplayerGame() {
-    const { gameState, createLobby, joinLobby, submitAnswer, requestRematch, userId } = useMultiplayer();
+    const { gameState, createLobby, joinLobby, submitAnswer, requestRematch, exitGame, userId } = useMultiplayer();
     const { currentPokemon } = useGame(); // Get selected pokemon from global context
 
     if (gameState.status === 'waiting') {
@@ -26,6 +26,7 @@ export function MultiplayerGame() {
                 gameState={gameState}
                 onSubmitAnswer={submitAnswer}
                 onRequestRematch={requestRematch}
+                onExitGame={exitGame}
                 userId={userId || ''}
             />
         );
