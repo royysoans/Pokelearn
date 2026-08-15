@@ -14,3 +14,37 @@ Object.defineProperty(window, 'matchMedia', {
         dispatchEvent: vi.fn(),
     })),
 });
+
+const createStorageMock = () => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => {
+      store[key] = value.toString();
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+    get length() {
+      return Object.keys(store).length;
+    },
+    key: (index: number) => Object.keys(store)[index] || null,
+  };
+};
+
+if (!globalThis.localStorage || typeof globalThis.localStorage.clear !== 'function') {
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: createStorageMock(),
+    writable: true,
+  });
+}
+if (!globalThis.sessionStorage || typeof globalThis.sessionStorage.clear !== 'function') {
+  Object.defineProperty(globalThis, 'sessionStorage', {
+    value: createStorageMock(),
+    writable: true,
+  });
+}
+

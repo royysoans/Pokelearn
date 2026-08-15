@@ -55,7 +55,10 @@ export function Login({ onSwitchToSignup, onLoginSuccess }: LoginProps) {
   }, []);
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-slate-950 font-pixel relative overflow-hidden">
+    <div
+      className="flex min-h-screen items-center justify-center p-4 bg-cover bg-center bg-no-repeat font-pixel relative overflow-hidden"
+      style={{ backgroundImage: `url('/Kanto.jpg')` }}
+    >
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {/* Floating Gradient Orbs */}
@@ -72,7 +75,8 @@ export function Login({ onSwitchToSignup, onLoginSuccess }: LoginProps) {
         <FloatingOrb followPointer size={300} />
       </div>
 
-      <div className="w-full max-w-md space-y-6 bg-black/50 p-8 rounded-lg backdrop-blur-sm relative z-10">
+      <div className="w-full max-w-md space-y-6 bg-black/60 p-8 rounded-2xl backdrop-blur-md border-2 border-primary/30 shadow-2xl relative z-10">
+
         <div className="text-center">
           <h1 className="text-3xl font-bold text-primary text-shadow-pixel mb-2">
             PokéLearn

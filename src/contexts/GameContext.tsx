@@ -144,7 +144,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   // ---------------- SAVE STATE ----------------
   const isSavingRef = useRef(false);
-
+  const saveRetryCountRef = useRef(0);
+  const saveRetryTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const saveGameState = useCallback(async (overrideUser?: User | null) => {
     const userToUse = overrideUser || user;
@@ -232,13 +233,30 @@ export function GameProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      // Clear retries on success
+      saveRetryCountRef.current = 0;
+      if (saveRetryTimerRef.current) clearTimeout(saveRetryTimerRef.current);
+
     } catch (error: any) {
       console.error("❌ Error saving game state:", error.message || error);
-      toast({
-        title: "Save Failed",
-        description: "Could not save your progress. Please check your connection.",
-        variant: "destructive",
-      });
+      
+      // Retry with exponential backoff up to 3 times
+      if (saveRetryCountRef.current < 3) {
+        saveRetryCountRef.current += 1;
+        const delay = Math.pow(2, saveRetryCountRef.current) * 2000;
+        console.warn(`🔄 Retrying save in ${delay}ms (attempt ${saveRetryCountRef.current}/3)...`);
+        
+        if (saveRetryTimerRef.current) clearTimeout(saveRetryTimerRef.current);
+        saveRetryTimerRef.current = setTimeout(() => {
+          saveGameState(userToUse);
+        }, delay);
+      } else {
+        toast({
+          title: "Save Failed",
+          description: "Could not save your progress after multiple retries. Please check connection.",
+          variant: "destructive",
+        });
+      }
     } finally {
       isSavingRef.current = false;
     }

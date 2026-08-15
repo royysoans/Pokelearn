@@ -75,6 +75,42 @@ function normalizeQuestionText(text: string): string {
   return text.toLowerCase().trim().replace(/[\s\?\.!,:;]+$/g, "").replace(/\s+/g, " ");
 }
 
+// ------------------ Offline Quiz Cache Helpers ------------------
+function saveToOfflineCache(cacheKey: string, questions: Question[]) {
+  try {
+    if (typeof localStorage === "undefined" || !questions.length) return;
+    const existingRaw = localStorage.getItem(`offlineQuiz:${cacheKey}`);
+    let existing: Question[] = [];
+    if (existingRaw) {
+      try { existing = JSON.parse(existingRaw); } catch {}
+    }
+    const combined = [...existing];
+    const existingTexts = new Set(existing.map(q => normalizeQuestionText(q.q)));
+    for (const q of questions) {
+      const norm = normalizeQuestionText(q.q);
+      if (!existingTexts.has(norm)) {
+        existingTexts.add(norm);
+        combined.push(q);
+      }
+    }
+    localStorage.setItem(`offlineQuiz:${cacheKey}`, JSON.stringify(combined.slice(-100)));
+  } catch (err) {
+    console.warn("Could not save questions to offline cache:", err);
+  }
+}
+
+function getFromOfflineCache(cacheKey: string): Question[] | null {
+  try {
+    if (typeof localStorage === "undefined") return null;
+    const raw = localStorage.getItem(`offlineQuiz:${cacheKey}`);
+    if (!raw) return null;
+    const questions = JSON.parse(raw) as Question[];
+    return questions.length > 0 ? questions : null;
+  } catch {
+    return null;
+  }
+}
+
 // ------------------ Generate Questions ------------------
 export async function generateQuestions(
   subject: string,
@@ -83,6 +119,8 @@ export async function generateQuestions(
   gym?: string,
   level?: number | string,
 ): Promise<Question[]> {
+  const cacheKey = `${region ?? "Kanto"}:${gym ?? "General"}:${subject}:${level ?? "1"}`;
+  
   try {
     // Call Supabase Edge Function
     let difficultyStr: string;
@@ -94,6 +132,10 @@ export async function generateQuestions(
       difficultyStr = "normal";
     }
     const { questions } = await invokeFunction("generate-quiz", { subject, count, region, gym, difficulty: difficultyStr });
+
+    if (questions && questions.length > 0) {
+      saveToOfflineCache(cacheKey, questions);
+    }
 
     // Session & recent dedup
     const usedKey = `usedQuestions:${region ?? "Unknown"}|${gym ?? "Arena"}|${subject}|${level ?? "normal"}`;
@@ -130,7 +172,15 @@ export async function generateQuestions(
 
     return selected.sort(() => Math.random() - 0.5);
   } catch (err) {
-    console.error("AI generation failed, using fallback:", err);
+    console.error("AI generation failed, checking offline cache or fallback:", err);
+
+    // Try offline cache first before static bank fallback
+    const cached = getFromOfflineCache(cacheKey);
+    if (cached && cached.length >= count) {
+      console.log(`📦 Restored ${count} questions from offline cache for key ${cacheKey}`);
+      return cached.sort(() => Math.random() - 0.5).slice(0, count);
+    }
+
     // Return fallback questions, repeating if necessary to reach count
     const base = questionBank[subject] || [
       { q: `What is the most important concept in ${subject}?`, a: ["Understanding", "Practice", "Patience"], c: "Understanding", e: `The core of ${subject} relies on understanding the fundamentals.` },
@@ -144,9 +194,16 @@ export async function generateQuestions(
 export async function fetchQuizQuestions(subject: string, count: number): Promise<Question[]> {
   try {
     const { questions } = await invokeFunction("generate-quiz", { subject, count });
+    if (questions && questions.length > 0) {
+      saveToOfflineCache(`general:${subject}`, questions);
+    }
     return questions;
   } catch (err) {
-    console.error("Failed to fetch AI questions, using fallback:", err);
+    console.error("Failed to fetch AI questions, checking offline cache or fallback:", err);
+    const cached = getFromOfflineCache(`general:${subject}`);
+    if (cached && cached.length >= count) {
+      return cached.sort(() => Math.random() - 0.5).slice(0, count);
+    }
     const base = questionBank[subject] || [
       { q: `What is the most important concept in ${subject}?`, a: ["Understanding", "Practice", "Patience"], c: "Understanding", e: `The core of ${subject} relies on understanding the fundamentals.` },
       { q: `Which of these is related to ${subject}?`, a: ["Everything", "Nothing", "Something"], c: "Everything", e: `Many concepts tie back to ${subject}.` }
@@ -154,3 +211,4 @@ export async function fetchQuizQuestions(subject: string, count: number): Promis
     return Array.from({ length: count }, (_, i) => ({ ...base[i % base.length] }));
   }
 }
+

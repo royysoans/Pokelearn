@@ -1,12 +1,43 @@
+export function getSfxVolume(): number {
+  if (typeof localStorage === "undefined") return 0.5;
+  const saved = localStorage.getItem("sfxVolume");
+  return saved ? Math.min(1, Math.max(0, parseFloat(saved))) : 0.5;
+}
+
+export function setSfxVolume(val: number): void {
+  if (typeof localStorage === "undefined") return;
+  const clamped = Math.min(1, Math.max(0, val));
+  localStorage.setItem("sfxVolume", clamped.toString());
+}
+
+export function isSfxMuted(): boolean {
+  if (typeof localStorage === "undefined") return false;
+  return localStorage.getItem("sfxMuted") === "true";
+}
+
+export function setSfxMuted(muted: boolean): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem("sfxMuted", String(muted));
+}
+
 export function useSound() {
+  function getEffectiveGain(baseGain = 0.05): number {
+    if (isSfxMuted()) return 0;
+    const vol = getSfxVolume();
+    return baseGain * vol;
+  }
+
   function playTone(frequency: number, durationMs = 180, type: OscillatorType = "square") {
+    const gainVal = getEffectiveGain(0.1);
+    if (gainVal <= 0) return;
+
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       oscillator.type = type;
       oscillator.frequency.value = frequency;
-      gain.gain.value = 0.05; // subtle volume
+      gain.gain.value = gainVal;
       oscillator.connect(gain);
       gain.connect(audioCtx.destination);
       oscillator.start();
@@ -20,6 +51,10 @@ export function useSound() {
   }
 
   return {
+    getSfxVolume,
+    setSfxVolume,
+    isSfxMuted,
+    setSfxMuted,
     playCorrect: () => {
       // simple ascending chirp
       playTone(660, 120);
@@ -37,6 +72,10 @@ export function useSound() {
       setTimeout(() => playTone(783, 200), 240); // G5
     },
     playEvolutionStart: () => {
+      const startGain = getEffectiveGain(0.05);
+      const endGain = getEffectiveGain(0.1);
+      if (startGain <= 0) return;
+
       try {
         const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
         const oscillator = audioCtx.createOscillator();
@@ -55,8 +94,8 @@ export function useSound() {
         lfoGain.connect(oscillator.frequency);
         lfo.start();
 
-        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 2.0);
+        gain.gain.setValueAtTime(startGain, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(endGain, audioCtx.currentTime + 2.0);
         gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 3.0);
 
         oscillator.connect(gain);
@@ -70,29 +109,33 @@ export function useSound() {
       } catch (_) { }
     },
     playEvolutionSuccess: () => {
-      // Fanfare: G G G E A G
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const t = ctx.currentTime;
+      const baseG = getEffectiveGain(0.08);
+      if (baseG <= 0) return;
 
-      const play = (freq: number, time: number, dur: number) => {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = "square";
-        osc.frequency.value = freq;
-        g.gain.setValueAtTime(0.05, time);
-        g.gain.exponentialRampToValueAtTime(0.01, time + dur - 0.05);
-        osc.connect(g);
-        g.connect(ctx.destination);
-        osc.start(time);
-        osc.stop(time + dur);
-      };
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const t = ctx.currentTime;
 
-      play(783.99, t, 0.1); // G5
-      play(783.99, t + 0.15, 0.1); // G5
-      play(783.99, t + 0.3, 0.1); // G5
-      play(1046.50, t + 0.45, 0.4); // C6
+        const play = (freq: number, time: number, dur: number) => {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = "square";
+          osc.frequency.value = freq;
+          g.gain.setValueAtTime(baseG, time);
+          g.gain.exponentialRampToValueAtTime(Math.max(0.001, baseG * 0.1), time + dur - 0.05);
+          osc.connect(g);
+          g.connect(ctx.destination);
+          osc.start(time);
+          osc.stop(time + dur);
+        };
 
-      setTimeout(() => ctx.close(), 1000);
+        play(783.99, t, 0.1); // G5
+        play(783.99, t + 0.15, 0.1); // G5
+        play(783.99, t + 0.3, 0.1); // G5
+        play(1046.50, t + 0.45, 0.4); // C6
+
+        setTimeout(() => ctx.close(), 1000);
+      } catch (_) {}
     },
     playBuddyCry: () => {
       // Cute high-pitched chirp
@@ -102,6 +145,7 @@ export function useSound() {
     }
   };
 }
+
 
 
 
