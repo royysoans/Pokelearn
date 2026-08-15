@@ -4,41 +4,44 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom";
 
 
-interface SignupProps {
-  onSwitchToLogin: () => void;
-  onSignupSuccess?: () => void;
-}
-
-export function Signup({ onSwitchToLogin, onSignupSuccess }: SignupProps) {
-  const [email, setEmail] = useState("");
+export function ResetPassword() {
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signUp } = useAuth();
+  const { updatePassword } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
-    const { error } = await signUp(email, password, name);
+    if (password !== confirmPassword) {
+      toast({
+        title: "Passwords Do Not Match",
+        description: "Please make sure both passwords match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await updatePassword(password);
 
     if (error) {
       toast({
-        title: "Signup Failed",
+        title: "Update Failed",
         description: error.message,
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Account Created!",
-        description: "Please check your email to confirm your account.",
+        title: "Password Updated!",
+        description: "Your password has been changed successfully. Please log in with your new password.",
       });
-      if (onSignupSuccess) {
-        onSignupSuccess();
-      }
+      navigate("/login");
     }
 
     setLoading(false);
@@ -56,46 +59,37 @@ export function Signup({ onSwitchToLogin, onSignupSuccess }: SignupProps) {
       <div className="w-full max-w-md space-y-6 bg-black/60 p-8 rounded-2xl backdrop-blur-md border-2 border-primary/30 shadow-2xl relative z-10">
 
 
-
         <div className="text-center">
           <h1 className="text-3xl font-bold text-primary text-shadow-pixel mb-2">
             PokéLearn
           </h1>
-          <h2 className="text-xl text-foreground/80">Sign Up</h2>
+          <h2 className="text-xl text-foreground/80">Set New Password</h2>
+          <p className="text-xs text-muted-foreground mt-2">
+            Enter your new password below.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Trainer Name</Label>
+            <Label htmlFor="new-password">New Password</Label>
             <Input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="pixel-input"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="pixel-input"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
+              id="new-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="pixel-input"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirm-password">Confirm New Password</Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
               minLength={6}
               className="pixel-input"
@@ -108,16 +102,16 @@ export function Signup({ onSwitchToLogin, onSignupSuccess }: SignupProps) {
             className="w-full"
             disabled={loading}
           >
-            {loading ? "Creating Account..." : "Sign Up"}
+            {loading ? "Updating..." : "Update Password"}
           </PixelButton>
         </form>
 
         <div className="text-center">
           <button
-            onClick={onSwitchToLogin}
+            onClick={() => navigate("/login")}
             className="text-sm text-primary hover:underline"
           >
-            Already have an account? Login
+            Back to Login
           </button>
         </div>
       </div>

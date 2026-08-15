@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Medal, Crown, ArrowLeft, Star, TrendingUp, TrendingDown, Minus, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { FloatingOrb } from "./FloatingOrb";
+
 
 interface LeaderboardEntry {
   name: string;
@@ -96,24 +96,18 @@ export function Leaderboard() {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] bg-fixed relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Floating Gradient Orbs */}
-        {[...Array(8)].map((_, i) => (
-          <FloatingOrb
-            key={`orb-${i}`}
-            index={i}
-            delay={i * 2}
-            duration={20 + Math.random() * 10}
-            size={100 + Math.random() * 150}
-          />
-        ))}
-        {/* Interactive Orb */}
-        <FloatingOrb followPointer size={300} />
-      </div>
+    <div className="min-h-screen p-4 md:p-8 relative overflow-hidden">
+      {/* Fixed background image layer */}
+      <div
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
+        style={{ backgroundImage: `url('/image2.png')` }}
+      />
+      {/* Dark overlay for readability */}
+      <div className="fixed inset-0 bg-black/50 pointer-events-none z-0" />
 
       <div className="max-w-4xl mx-auto relative z-10">
+
+
 
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">

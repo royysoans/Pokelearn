@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, Medal, Shield, Crown, Lock, Star, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { FloatingOrb } from "@/components/FloatingOrb";
+
 
 const regions = ["Kanto", "Johto", "Hoenn", "Sinnoh", "Unova", "Kalos", "Alola", "Galar"];
 const arenas = ["Maths", "Science", "Coding"];
@@ -143,24 +143,18 @@ export function Badges() {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-[url('/grid-pattern.png')] bg-fixed relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Floating Gradient Orbs */}
-        {[...Array(8)].map((_, i) => (
-          <FloatingOrb
-            key={`orb-${i}`}
-            index={i}
-            delay={i * 2}
-            duration={20 + Math.random() * 10}
-            size={100 + Math.random() * 150}
-          />
-        ))}
-        {/* Interactive Orb */}
-        <FloatingOrb followPointer size={300} />
-      </div>
+    <div className="min-h-screen p-4 md:p-8 relative overflow-hidden">
+      {/* Fixed background image layer */}
+      <div
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
+        style={{ backgroundImage: `url('/mewtwo.png')` }}
+      />
+      {/* Dark overlay for readability over the image */}
+      <div className="fixed inset-0 bg-black/55 pointer-events-none z-0" />
 
       <div className="max-w-6xl mx-auto relative z-10">
+
+
 
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">

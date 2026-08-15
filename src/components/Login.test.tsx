@@ -79,6 +79,32 @@ describe('Login Component', () => {
     });
   });
 
+  it('handles forgot password mode and triggers reset link email', async () => {
+    const mockResetPasswordForEmail = vi.fn().mockResolvedValueOnce({ error: null });
+    (useAuth as any).mockReturnValue({
+      signIn: mockSignIn,
+      resetPasswordForEmail: mockResetPasswordForEmail,
+    });
+
+    render(<Login onSwitchToSignup={mockOnSwitchToSignup} onLoginSuccess={mockOnLoginSuccess} />);
+
+    // Click "Forgot password?" link
+    fireEvent.click(screen.getByText(/Forgot password\?/i));
+
+    expect(screen.getByText(/Reset Password/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Send Reset Link/i })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'reset@pokelearn.com' } });
+    fireEvent.click(screen.getByRole('button', { name: /Send Reset Link/i }));
+
+    await waitFor(() => {
+      expect(mockResetPasswordForEmail).toHaveBeenCalledWith('reset@pokelearn.com');
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
+        title: 'Reset Link Sent!',
+      }));
+    });
+  });
+
   it('switches to signup when clicking signup link', () => {
     render(<Login onSwitchToSignup={mockOnSwitchToSignup} onLoginSuccess={mockOnLoginSuccess} />);
 
@@ -86,3 +112,4 @@ describe('Login Component', () => {
     expect(mockOnSwitchToSignup).toHaveBeenCalled();
   });
 });
+

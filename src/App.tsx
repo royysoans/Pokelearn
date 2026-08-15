@@ -1,5 +1,6 @@
 // App Root
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,7 +23,9 @@ const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Login = lazy(() => import("@/components/Login").then(m => ({ default: m.Login })));
 const Signup = lazy(() => import("@/components/Signup").then(m => ({ default: m.Signup })));
+const ResetPassword = lazy(() => import("@/components/ResetPassword").then(m => ({ default: m.ResetPassword })));
 const StarterSelection = lazy(() => import("@/components/StarterSelection").then(m => ({ default: m.StarterSelection })));
+
 const RegionMap = lazy(() => import("@/components/RegionMap").then(m => ({ default: m.RegionMap })));
 const ArenaSelection = lazy(() => import("@/components/ArenaSelection").then(m => ({ default: m.ArenaSelection })));
 const BattleScreen = lazy(() => import("@/components/BattleScreen").then(m => ({ default: m.BattleScreen })));
@@ -100,7 +103,9 @@ const AnimatedRoutes = () => {
           <Route path="/" element={<PageTransition><Index /></PageTransition>} />
           <Route path="/login" element={<PageTransition><LoginWrapper /></PageTransition>} />
           <Route path="/signup" element={<PageTransition><SignupWrapper /></PageTransition>} />
+          <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/starter" element={<PageTransition><AuthGuard><StarterSelection /></AuthGuard></PageTransition>} />
+
           <Route path="/regions" element={<PageTransition><AuthGuard><RegionMap /></AuthGuard></PageTransition>} />
           <Route path="/gyms" element={<PageTransition><AuthGuard><ArenaSelectionWrapper /></AuthGuard></PageTransition>} />
           <Route path="/battle" element={<PageTransition><AuthGuard><BattleScreenWrapper /></AuthGuard></PageTransition>} />
@@ -222,6 +227,36 @@ const AudioControlsMenu = () => {
   );
 };
 
+import { supabase } from "@/integrations/supabase/client";
+
+const PasswordRecoveryListener = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkHashAndSearch = () => {
+      const hash = window.location.hash || "";
+      const search = window.location.search || "";
+      if (hash.includes("type=recovery") || search.includes("type=recovery")) {
+        console.log("🔑 Password recovery token detected in URL, navigating to /reset-password");
+        navigate("/reset-password", { replace: true });
+      }
+    };
+
+    checkHashAndSearch();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        console.log("🔑 PASSWORD_RECOVERY event received from Supabase, navigating to /reset-password");
+        navigate("/reset-password", { replace: true });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  return null;
+};
+
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -233,6 +268,7 @@ const App = () => {
           <AudioControlsMenu />
 
           <BrowserRouter>
+            <PasswordRecoveryListener />
             <AuthProvider>
               <GameProvider>
                 <ErrorBoundary>
@@ -247,6 +283,7 @@ const App = () => {
     </QueryClientProvider>
   );
 };
+
 
 export default App;
 

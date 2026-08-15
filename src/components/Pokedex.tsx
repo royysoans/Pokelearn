@@ -1,7 +1,7 @@
 import { useGame } from "@/contexts/GameContext";
 import { PixelButton } from "./PixelButton";
-import { FloatingOrb } from "./FloatingOrb";
 import { useState, useMemo } from "react";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, X, Trophy, Sparkles, Zap, Flame, Droplets, Leaf, Bug, Ghost, Skull, Mountain, Star, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -63,24 +63,15 @@ export function Pokedex() {
   }, [gameState.pokemon, searchQuery, selectedType, selectedRarity]);
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-[url('/grid-pattern.png')] bg-fixed relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Floating Gradient Orbs */}
-        {[...Array(8)].map((_, i) => (
-          <FloatingOrb
-            key={`orb-${i}`}
-            index={i}
-            delay={i * 2}
-            duration={20 + Math.random() * 10}
-            size={100 + Math.random() * 150}
-          />
-        ))}
-        {/* Interactive Orb */}
-        <FloatingOrb followPointer size={300} />
-      </div>
+    <div className="min-h-screen p-4 md:p-8 relative overflow-hidden">
+      {/* Fixed background pattern layer */}
+      <div
+        className="fixed inset-0 bg-[url('/grid-pattern.png')] bg-repeat pointer-events-none z-0 opacity-40"
+      />
 
       <div className="max-w-7xl mx-auto relative z-10">
+
+
 
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -104,13 +95,14 @@ export function Pokedex() {
           </div>
 
           <div className="flex gap-2">
-            <PixelButton onClick={() => setCurrentPage("gyms")} variant="secondary">
-              Gyms
+            <PixelButton onClick={() => setCurrentPage("regions")} variant="secondary">
+              Back to Regions
             </PixelButton>
             <PixelButton onClick={() => setCurrentPage("home")}>
               Home
             </PixelButton>
           </div>
+
         </div>
 
         {/* Filters Section */}
