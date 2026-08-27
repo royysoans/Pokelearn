@@ -116,7 +116,9 @@ export function AITrainingBattle() {
                 if (frame < 240) requestAnimationFrame(loop); else canvas.remove();
             };
             requestAnimationFrame(loop);
-        } catch { }
+        } catch {
+            // ignore canvas cleanup errors
+        }
         toast({ title: "Training Complete!", description: `You scored ${correctAnswers} out of ${questions.length}.` });
     };
 

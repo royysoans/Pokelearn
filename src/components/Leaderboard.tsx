@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { PixelButton } from "./PixelButton";
 import { ShareButtons } from "./ShareButtons";
@@ -17,6 +17,12 @@ interface LeaderboardEntry {
 }
 
 
+interface LeaderboardViewRow {
+  user_id: string;
+  name: string | null;
+  pokemon_count: number | null;
+}
+
 export function Leaderboard() {
   const { gameState, setCurrentPage, user } = useGame();
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
@@ -24,7 +30,7 @@ export function Leaderboard() {
   const [currentUserRank, setCurrentUserRank] = useState<number | null>(null);
   const previousRanksRef = useRef<Map<string, number>>(new Map());
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // Query the leaderboard_view which does server-side aggregation
       // This avoids the 1000-row limit issue with user_pokemons
@@ -34,8 +40,8 @@ export function Leaderboard() {
 
       if (leaderboardError) throw leaderboardError;
 
-      const sortedData = (leaderboardData || [])
-        .map((entry: any) => ({
+      const sortedData = ((leaderboardData as LeaderboardViewRow[] | null) || [])
+        .map((entry) => ({
           name: entry.name || "Unknown Trainer",
           pokemonCount: entry.pokemon_count || 0,
           userId: entry.user_id,
@@ -66,7 +72,7 @@ export function Leaderboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchData();
@@ -83,7 +89,7 @@ export function Leaderboard() {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchData]);
 
   const maxPokemon = leaderboardData.length > 0 ? leaderboardData[0].pokemonCount : 1;
   const top3 = leaderboardData.slice(0, 3);

@@ -1,11 +1,13 @@
 import { useGame } from "@/contexts/GameContext";
 import { PixelButton } from "./PixelButton";
 import { useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
+
+const SUBJECTS = ["math", "science", "coding"];
 
 export function MasteryDashboard() {
     const { gameState, setCurrentPage } = useGame();
-    const subjects = ["math", "science", "coding"];
+    const subjects = SUBJECTS;
 
     // Calculate mastery
     const masteryStats = useMemo(() => {
@@ -22,7 +24,7 @@ export function MasteryDashboard() {
             });
         });
         return stats;
-    }, [gameState.completedLevels]);
+    }, [gameState.completedLevels, subjects]);
 
     const maxTotalLevels = 8 * 10; // 8 regions * 10 levels
 
@@ -40,7 +42,7 @@ export function MasteryDashboard() {
         }
     };
 
-    const containerVariants = {
+    const containerVariants: Variants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
@@ -48,7 +50,7 @@ export function MasteryDashboard() {
         }
     };
 
-    const itemVariants = {
+    const itemVariants: Variants = {
         hidden: { y: 20, opacity: 0 },
         visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 100 } }
     };
@@ -113,7 +115,7 @@ export function MasteryDashboard() {
 
                         return (
                             <motion.div
-                                variants={itemVariants as any}
+                                variants={itemVariants}
                                 key={subject}
                                 className={`bg-card/80 backdrop-blur border-4 ${border} rounded-2xl p-6 flex flex-col justify-between shadow-xl relative overflow-hidden group`}
                             >
@@ -134,7 +136,7 @@ export function MasteryDashboard() {
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${percentage}%` }}
-                                            transition={{ duration: 1.5, ease: "easeOut" } as any}
+                                            transition={{ duration: 1.5, ease: "easeOut" }}
                                             className={`h-full ${color} opacity-80`}
                                         />
                                         {/* Segment markers for 10% blocks */}

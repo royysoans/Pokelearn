@@ -34,14 +34,14 @@ export function UserPokemonChart() {
 
       // Create a map of user_id to name
       const userMap: { [key: string]: string } = {};
-      profileData.forEach((profile: any) => {
+      (profileData as { id: string; name: string }[] | null)?.forEach((profile) => {
         userMap[profile.id] = profile.name;
       });
 
       // Count distinct pokemon per user
       const userCounts: { [key: string]: { name: string; pokemonIds: Set<number> } } = {};
 
-      pokemonData.forEach((item: any) => {
+      (pokemonData as { user_id: string; pokemon_id: number }[] | null)?.forEach((item) => {
         const userId = item.user_id;
         const name = userMap[userId] || "Unknown User";
 

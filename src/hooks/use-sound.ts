@@ -32,7 +32,8 @@ export function useSound() {
     if (gainVal <= 0) return;
 
     try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const audioCtx = new AudioCtx();
       const oscillator = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       oscillator.type = type;
@@ -77,7 +78,8 @@ export function useSound() {
       if (startGain <= 0) return;
 
       try {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const audioCtx = new AudioCtx();
         const oscillator = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         oscillator.type = "sine";
@@ -106,14 +108,15 @@ export function useSound() {
           lfo.stop();
           audioCtx.close();
         }, 3000);
-      } catch (_) { }
+      } catch (_) { /* ignore audio error */ }
     },
     playEvolutionSuccess: () => {
       const baseG = getEffectiveGain(0.08);
       if (baseG <= 0) return;
 
       try {
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const ctx = new AudioCtx();
         const t = ctx.currentTime;
 
         const play = (freq: number, time: number, dur: number) => {
@@ -135,7 +138,7 @@ export function useSound() {
         play(1046.50, t + 0.45, 0.4); // C6
 
         setTimeout(() => ctx.close(), 1000);
-      } catch (_) {}
+      } catch (_) { /* ignore audio error */ }
     },
     playBuddyCry: () => {
       // Cute high-pitched chirp

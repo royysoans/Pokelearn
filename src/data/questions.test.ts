@@ -26,7 +26,7 @@ describe('questions data service', () => {
       { q: 'What is 5 + 5?', a: ['8', '10', '12'], c: '10', e: '5 plus 5 equals 10.' },
       { q: 'What is 3 * 3?', a: ['6', '9', '12'], c: '9', e: '3 times 3 equals 9.' },
     ];
-    (invokeFunction as any).mockResolvedValueOnce({ questions: mockQuestions });
+    vi.mocked(invokeFunction).mockResolvedValueOnce({ questions: mockQuestions });
 
     const result = await generateQuestions('math', 2, 'Kanto', 'Math Gym', 1);
 
@@ -52,7 +52,7 @@ describe('questions data service', () => {
     localStorage.setItem('offlineQuiz:Johto:Science Gym:math:2', JSON.stringify(cachedQuestions));
 
     // Simulate API network failure
-    (invokeFunction as any).mockRejectedValueOnce(new Error('Network error'));
+    vi.mocked(invokeFunction).mockRejectedValueOnce(new Error('Network error'));
 
     const result = await generateQuestions('math', 2, 'Johto', 'Science Gym', 2);
 
@@ -61,7 +61,7 @@ describe('questions data service', () => {
   });
 
   it('uses questionBank fallback when offline cache is empty and API fails', async () => {
-    (invokeFunction as any).mockRejectedValueOnce(new Error('API Down'));
+    vi.mocked(invokeFunction).mockRejectedValueOnce(new Error('API Down'));
 
     const result = await fetchQuizQuestions('coding', 3);
 

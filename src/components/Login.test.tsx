@@ -20,12 +20,12 @@ describe('Login Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuth as any).mockReturnValue({
+    vi.mocked(useAuth).mockReturnValue({
       signIn: mockSignIn,
-    });
-    (useToast as any).mockReturnValue({
+    } as unknown as ReturnType<typeof useAuth>);
+    vi.mocked(useToast).mockReturnValue({
       toast: mockToast,
-    });
+    } as unknown as ReturnType<typeof useToast>);
   });
 
   it('renders login form elements properly', () => {
@@ -81,10 +81,10 @@ describe('Login Component', () => {
 
   it('handles forgot password mode and triggers reset link email', async () => {
     const mockResetPasswordForEmail = vi.fn().mockResolvedValueOnce({ error: null });
-    (useAuth as any).mockReturnValue({
+    vi.mocked(useAuth).mockReturnValue({
       signIn: mockSignIn,
       resetPasswordForEmail: mockResetPasswordForEmail,
-    });
+    } as unknown as ReturnType<typeof useAuth>);
 
     render(<Login onSwitchToSignup={mockOnSwitchToSignup} onLoginSuccess={mockOnLoginSuccess} />);
 

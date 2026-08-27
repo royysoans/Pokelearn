@@ -75,7 +75,7 @@ export function RegionMap() {
                     <PixelButton onClick={() => setCurrentPage("mastery")} variant="success">
                         Learning Dashboard
                     </PixelButton>
-                    <PixelButton onClick={() => setCurrentPage("ai-training" as any)} variant="primary">
+                    <PixelButton onClick={() => setCurrentPage("ai-training")} variant="primary">
                         AI Training Center
                     </PixelButton>
 

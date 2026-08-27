@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { generateQuestions } from '@/data/questions';
+import { generateQuestions, Question } from '@/data/questions';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface Player {
     id: string;
-    pokemon: any;
+    pokemon: unknown;
     hp: number;
 }
 
@@ -13,7 +14,7 @@ export interface GameState {
     battleId: string | null;
     isHost: boolean;
     opponent: Player | null;
-    questions: any[];
+    questions: Question[];
     currentQuestionIndex: number;
     myHp: number;
     opponentHp: number;
@@ -26,7 +27,7 @@ export interface GameState {
 export interface BattlePayload {
     id: string;
     lobby_id: string;
-    questions: any[];
+    questions: Question[];
     current_question_index: number;
     player_1_id: string;
     player_2_id: string;
@@ -63,6 +64,7 @@ const initialGameState: GameState = {
 export const useMultiplayer = () => {
     const [gameState, setGameState] = useState<GameState>(initialGameState);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const enterBattle = (battle: any) => {
         setGameState(prev => {
             const myPlayerId = userId;
@@ -186,7 +188,7 @@ export const useMultiplayer = () => {
 
     const [userId, setUserId] = useState<string | null>(null);
     const gameStateRef = useRef(gameState);
-    const activeChannelsRef = useRef<any[]>([]);
+    const activeChannelsRef = useRef<RealtimeChannel[]>([]);
 
     useEffect(() => {
         gameStateRef.current = gameState;
@@ -215,7 +217,7 @@ export const useMultiplayer = () => {
         getUserId();
     }, []);
 
-    const createLobby = async (topic: string, pokemon: any) => {
+    const createLobby = async (topic: string, pokemon: unknown) => {
         if (!userId) return;
 
         const { data: lobby, error } = await supabase
@@ -245,7 +247,7 @@ export const useMultiplayer = () => {
         subscribeToLobby(lobby.id);
     };
 
-    const joinLobby = async (lobbyId: string, pokemon: any) => {
+    const joinLobby = async (lobbyId: string, pokemon: unknown) => {
         if (!userId) return;
 
         const { error } = await supabase

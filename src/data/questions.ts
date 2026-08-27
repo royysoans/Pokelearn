@@ -72,7 +72,7 @@ function saveRecentQuestions(recent: Set<string>) {
 }
 
 function normalizeQuestionText(text: string): string {
-  return text.toLowerCase().trim().replace(/[\s\?\.!,:;]+$/g, "").replace(/\s+/g, " ");
+  return text.toLowerCase().trim().replace(/[\s?.!,:;]+$/g, "").replace(/\s+/g, " ");
 }
 
 // ------------------ Offline Quiz Cache Helpers ------------------
@@ -82,7 +82,7 @@ function saveToOfflineCache(cacheKey: string, questions: Question[]) {
     const existingRaw = localStorage.getItem(`offlineQuiz:${cacheKey}`);
     let existing: Question[] = [];
     if (existingRaw) {
-      try { existing = JSON.parse(existingRaw); } catch {}
+      try { existing = JSON.parse(existingRaw); } catch { /* ignore parse error */ }
     }
     const combined = [...existing];
     const existingTexts = new Set(existing.map(q => normalizeQuestionText(q.q)));

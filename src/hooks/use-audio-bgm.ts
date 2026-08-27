@@ -23,7 +23,7 @@ export function useAudioBgm(src: string) {
     audio.addEventListener("canplay", onCanPlay);
 
     if (!muted) {
-      audio.play().catch(() => {});
+      audio.play().catch(() => { /* autoplay blocked */ });
     }
 
     return () => {
@@ -31,7 +31,7 @@ export function useAudioBgm(src: string) {
       audio.removeEventListener("canplay", onCanPlay);
       audioRef.current = null;
     };
-  }, [src]);
+  }, [src, muted, volume]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -54,7 +54,7 @@ export function useAudioBgm(src: string) {
     if (audio) {
       audio.muted = next;
       if (!next) {
-        try { await audio.play(); } catch {}
+        try { await audio.play(); } catch { /* ignore audio play error */ }
       }
     }
   };

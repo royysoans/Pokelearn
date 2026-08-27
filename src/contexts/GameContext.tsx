@@ -132,8 +132,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // CRITICAL: Mark as loaded only after successful state set
       isGameLoadedRef.current = true;
       setIsGameLoaded(true);
-    } catch (error: any) {
-      console.error("❌ Error loading game state:", error.message || error);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error("❌ Error loading game state:", err.message || error);
       toast({
         title: "Load Failed",
         description: "Could not load your game data. Please refresh to try again.",
@@ -237,8 +238,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       saveRetryCountRef.current = 0;
       if (saveRetryTimerRef.current) clearTimeout(saveRetryTimerRef.current);
 
-    } catch (error: any) {
-      console.error("❌ Error saving game state:", error.message || error);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error("❌ Error saving game state:", err.message || error);
       
       // Retry with exponential backoff up to 3 times
       if (saveRetryCountRef.current < 3) {
@@ -407,8 +409,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
         } else {
           console.log("ℹ️ Pokémon already exists in database:", pokemon.name);
         }
-      } catch (error: any) {
-        console.error("❌ Error immediately saving Pokémon:", error.message || error);
+      } catch (error: unknown) {
+        const err = error as Error;
+        console.error("❌ Error immediately saving Pokémon:", err.message || error);
         toast({
           title: "Save Failed",
           description: "Could not save your Pokémon. It will be saved automatically soon.",
@@ -483,7 +486,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         ...updates,
       }));
 
-      const dbUpdates: any = {};
+      const dbUpdates: Record<string, string> = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.avatarId !== undefined) dbUpdates.avatar_id = updates.avatarId;
       if (updates.bio !== undefined) dbUpdates.bio = updates.bio;
@@ -500,7 +503,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         title: "Profile Updated",
         description: "Your trainer card has been updated!",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating profile:", error);
       toast({
         title: "Update Failed",

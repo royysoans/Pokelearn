@@ -225,7 +225,9 @@ export function BattleScreen({ gym, level }: BattleScreenProps) {
         if (frame < 240) requestAnimationFrame(loop); else canvas.remove();
       };
       requestAnimationFrame(loop);
-    } catch { }
+    } catch {
+      // ignore canvas cleanup errors
+    }
 
     // Award badge if Gym Leader was defeated
     if (level === "leader" && gameState.currentRegion) {
